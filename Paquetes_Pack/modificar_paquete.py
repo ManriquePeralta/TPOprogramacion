@@ -9,23 +9,23 @@ def modificar_paquete():
             print("Deje vacío para no modificar el campo.")
             destino = input(f"Destino actual ({p['destino']}): ").strip() or p['destino']
             if destino == "":
-                print("❌ El destino no puede estar vacío.")
+                print(" El destino no puede estar vacío.")
                 return
             precio = input(f"Precio actual ({p['precio']}): ").strip() or str(p['precio'])
             if not precio.isdigit() or int(precio) < 0:
-                print("❌ El precio debe ser un número positivo.")
+                print(" El precio debe ser un número positivo.")
                 return
             fecha_inicio = input(f"Fecha inicio actual ({p['fecha_inicio']}): ").strip() or p['fecha_inicio']
             fecha_fin = input(f"Fecha fin actual ({p['fecha_fin']}): ").strip() or p['fecha_fin']
             if fecha_inicio == "" or fecha_fin == "":
-                print("❌ Las fechas no pueden estar vacías.")
+                print("Las fechas no pueden estar vacías.")
                 return
             if fecha_inicio > fecha_fin:
-                print("❌ La fecha de inicio no puede ser posterior a la de finalización.")
+                print("La fecha de inicio no puede ser posterior a la de finalización.")
                 return
             cupos = input(f"Cupos actual ({p['cupos']}): ").strip() or str(p['cupos'])
             if not cupos.isdigit() or int(cupos) < 0:
-                print("❌ Los cupos deben ser un número positivo.")
+                print("Los cupos deben ser un número positivo.")
                 return
             tipo = input(f"Tipo actual ({p['tipo']}): ").strip() or p['tipo']
             descripcion = input(f"Descripción actual ({p['descripcion']}): ").strip() or p['descripcion']
@@ -38,4 +38,4 @@ def modificar_paquete():
             p['descripcion'] = descripcion
             print("✅ Paquete modificado.")
             return
-    print("❌ Destino no encontrado.")
+    print(" Destino no encontrado.")
