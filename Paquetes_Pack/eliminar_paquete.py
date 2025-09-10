@@ -5,11 +5,11 @@ def eliminar_paquete():
     mostrar_paquetes()
     destino_buscar = input("Ingrese el destino del paquete a eliminar: ").strip()
     if destino_buscar == "":
-        print("❌ El destino no puede estar vacío.")
+        print(" El destino no puede estar vacío.")
         return
     for p in paquetes:
-        if p[0].lower() == destino_buscar.lower():
+        if p["destino"].lower() == destino_buscar.lower():
             paquetes.remove(p)
             print("✅ Paquete eliminado.")
             return
-    print("❌ Destino no encontrado.")
+    print("Destino no encontrado.")

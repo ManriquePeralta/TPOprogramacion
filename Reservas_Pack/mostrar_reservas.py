@@ -81,12 +81,12 @@ def mostrar_reservas():
                 print("  Cliente no encontrado")
             print("\nPaquete:")
             if paquete:
-                print(f"  Destino: {paquete[1]}")
-                print(f"  Tipo: {paquete[6]}")
-                print(f"  Precio: ${paquete[2]}")
-                print(f"  Fecha de salida: {paquete[3]}")
-                print(f"  Fecha de llegada: {paquete[4]}")
-                print(f"  Descripcion: {paquete[7]}")
+                print(f"  Destino: {paquete['destino']}")
+                print(f"  Tipo: {paquete['tipo']}")
+                print(f"  Precio: ${paquete['precio']}")
+                print(f"  Fecha de salida: {paquete['fecha_inicio']}")
+                print(f"  Fecha de llegada: {paquete['fecha_fin']}")
+                print(f"  Descripcion: {paquete['descripcion']}")
             else:
                 print("  Paquete no encontrado")
             print()  # Espacio adicional al final
