@@ -1,5 +1,5 @@
 from Paquetes_Pack.lista_paquetes import paquetes
-
+from Paquetes_Pack.validaciones_paquete import mostrar_error
 def mostrar_paquetes():
     ancho_destino = 20
     ancho_precio = 10
@@ -13,7 +13,7 @@ def mostrar_paquetes():
     print("-" * (ancho_destino + ancho_precio + 2 * ancho_fecha + ancho_cupos + ancho_tipo + ancho_desc + 6))
 
     if not paquetes:
-        print("No hay paquetes disponibles.")
+        mostrar_error("No hay paquetes disponibles.")
         return
     # Filas
     for paquete in paquetes:

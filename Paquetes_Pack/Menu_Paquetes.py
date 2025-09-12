@@ -3,6 +3,7 @@ from Paquetes_Pack.agregar_paquetes import agregar_paquete
 from Paquetes_Pack.modificar_paquete import modificar_paquete
 from Paquetes_Pack.eliminar_paquete import eliminar_paquete
 from Paquetes_Pack.mostrar_paquetes import mostrar_paquetes
+from Paquetes_Pack.validaciones_paquete import mostrar_error
 
 def menu_paquetes():
     op = ""
@@ -25,5 +26,5 @@ def menu_paquetes():
         elif op == "0":
             return
         else:
-            print("❌ Opción inválida.")
+            mostrar_error("Opción inválida.")
 
