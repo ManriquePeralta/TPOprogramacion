@@ -7,7 +7,7 @@ Incluye formato de tabla y validaciones de entrada.
 from Paquetes_Pack.lista_paquetes import paquetes
 from Paquetes_Pack.validaciones_paquete import mostrar_error
 def mostrar_paquetes():
-        # Función que muestra la tabla de paquetes y permite consultar detalles
+    # Función que muestra la tabla de paquetes
     ancho_destino = 20
     ancho_precio = 10
     ancho_fecha = 12
@@ -26,7 +26,8 @@ def mostrar_paquetes():
     for paquete in paquetes:
         print(f'{paquete["id_paquete"]:<{ancho_id}} {paquete["destino"]:<{ancho_destino}} ${paquete["precio"]:>{ancho_precio - 1}} {paquete["fecha_inicio"]:^{ancho_fecha}} {paquete["fecha_fin"]:^{ancho_fecha}} {paquete["cupos"]:>{ancho_cupos}} {paquete["tipo"]:<{ancho_tipo}} {paquete["descripcion"]:<{ancho_desc}}')
 
-    # Opción de búsqueda por ID o destino
+def buscar_detalle_paquete():
+    # Función que permite buscar detalles de un paquete
     print("\n¿Desea ver el detalle de un paquete?")
     print("1. Buscar por ID")
     print("2. Buscar por destino")
@@ -37,10 +38,7 @@ def mostrar_paquetes():
             mostrar_error("ID inválido.")
             return
         id_buscar = int(id_txt)
-        paquete = None
-        for p in paquetes:
-            if p["id_paquete"] == id_buscar:
-                paquete = p
+        paquete = next((p for p in paquetes if p["id_paquete"] == id_buscar), None)
         if paquete:
             print("\n=== DETALLE DEL PAQUETE ===")
             for k, v in paquete.items():
@@ -49,10 +47,7 @@ def mostrar_paquetes():
             mostrar_error("ID no encontrado.")
     elif opcion == "2":
         destino_buscar = input("Ingrese el destino del paquete: ").strip().lower()
-        paquete = None
-        for p in paquetes:
-            if p["destino"].lower() == destino_buscar:
-                paquete = p
+        paquete = next((p for p in paquetes if p["destino"].lower() == destino_buscar), None)
         if paquete:
             print("\n=== DETALLE DEL PAQUETE ===")
             for k, v in paquete.items():

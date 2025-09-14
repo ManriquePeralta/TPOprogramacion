@@ -3,7 +3,7 @@ from Reservas_Pack.lista_reservas import reservas
 from Paquetes_Pack.lista_paquetes import paquetes
 
 # Importación de la función para mostrar reservas
-from Reservas_Pack.mostrar_reservas import mostrar_reservas
+from Reservas_Pack.mostrar_reservas import mostrar_reserva
 from Reservas_Pack.funciones_aux import busqueda_secuencial_por_posicion
 import re
 
@@ -12,11 +12,15 @@ import re
 def eliminar_reserva():
     print("\n\n=== ELIMINAR RESERVA ===")
     # Muestra las reservas existentes
-    mostrar_reservas()
-    id_reserva_txt = input("\nIngrese el ID de la reserva a eliminar: ").strip()
+    mostrar_reserva()
+    id_reserva_txt = input("\nIngrese el ID de la reserva a eliminar (0 para salir): ").strip()
     while re.match(r"^\d+$", id_reserva_txt) is None:
         print("\nEntrada inválida. Debe ser un número entero positivo.\n")
         id_reserva_txt = input("Ingrese el ID de la reserva a eliminar: ").strip()
+
+    if id_reserva_txt == "0":
+        print("Saliendo sin eliminar ninguna reserva.")
+        return
 
     id_reserva = int(id_reserva_txt)
 
@@ -32,12 +36,12 @@ def eliminar_reserva():
     # Buscar y eliminar la reserva
     for reserva in reservas:
         if reserva[0] == id_reserva:
-            reservas.remove(reserva)
+            reservas.remove(reserva)  # Eliminar correctamente la reserva de la lista
             # Restaurar los cupos en el paquete correspondiente
             for paquete in paquetes:
-                if paquete[1] == reserva[2]:
-                    paquete[5] += reserva[3]
+                if paquete["destino"] == reserva[2]:
+                    paquete["cupos"] += reserva[3]
             print(f"\nReserva ID {id_reserva} eliminada con éxito.\n")
             return
 
-    print(f"\nNo se encontró una reserva con ID {id_reserva}.\n")
+    print("\nNo se encontró la reserva especificada.\n")

@@ -1,10 +1,11 @@
 # importación de funciones de gestión de reservas
 from Reservas_Pack.agregar_reserva import agregar_reserva
-from Reservas_Pack.mostrar_reservas import mostrar_reservas
+from Reservas_Pack.mostrar_reservas import mostrar_reserva
+from Reservas_Pack.mostrar_reservas import mostrar_detalle
 from Reservas_Pack.modificar_reserva import modificar_reserva
 from Reservas_Pack.eliminar_reserva import eliminar_reserva
 from Reservas_Pack.estadisticas_reserva import estadisticas_reservas
-
+from Reservas_Pack.mostrar_reservas import mostrar_detalle_interactivo
 
 # Función del menú de reservas
 def menu_reservas():
@@ -25,7 +26,8 @@ def menu_reservas():
         if opcion == "1":
             agregar_reserva()
         elif opcion == "2":
-            mostrar_reservas()
+            mostrar_reserva()           
+            mostrar_detalle_interactivo()
         elif opcion == "3":
             modificar_reserva()
         elif opcion == "4":

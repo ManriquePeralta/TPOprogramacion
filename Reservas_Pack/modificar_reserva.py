@@ -1,14 +1,14 @@
 from Reservas_Pack.lista_reservas import reservas
 from Paquetes_Pack.lista_paquetes import paquetes
 from Paquetes_Pack.mostrar_paquetes import mostrar_paquetes
-from Reservas_Pack.mostrar_reservas import mostrar_reservas
+from Reservas_Pack.mostrar_reservas import mostrar_reserva
 from Reservas_Pack.funciones_aux import busqueda_secuencial_por_posicion
 import re
 
 
 # Función para modificar una reserva existente
 def modificar_reserva():
-    mostrar_reservas()
+    mostrar_reserva()
     id_modificar_txt = input("\nIngrese el ID de la reserva a modificar: ").strip()
     while re.match(r"^\d+$", id_modificar_txt) is None:
         print("\nEntrada inválida. Debe ser un número entero positivo.\n")
@@ -21,8 +21,7 @@ def modificar_reserva():
     while opcion != "0":
         print("\n\n=== MENÚ MODIFICAR RESERVA ===")
         print("1. Modificar cantidad de personas")
-        print("2. Modificar tipo de paquete")
-        print("3. Modificar paquete")
+        print("2. Modificar paquete")
         print("0. Volver al menú principal")
 
         opcion = input("\nSeleccione una opción: ")
@@ -42,16 +41,13 @@ def modificar_cantPersonas(id_modificar):
     # Recorre las reservas para encontrar la que coincide con el ID proporcionado
     for reserva in reservas:
         if reserva[0] == id_modificar:
-            print(
-                f"ID Reserva: {reserva[0]}, Cliente ID: {reserva[1]}, Destino: {reserva[2]}, Cantidad de personas: {reserva[3]}"
-            )
             nueva_cantidad = int(input("Ingrese la nueva cantidad de personas: "))
             diferencia = nueva_cantidad - reserva[3]
             # Validar que la nueva cantidad sea válida y no exceda los cupos disponibles
             for paquete in paquetes:
-                if paquete[1] == reserva[2]:
-                    if paquete[5] >= diferencia:
-                        paquete[5] -= diferencia
+                if paquete["destino"] == reserva[2]:
+                    if paquete["cupos"] >= diferencia:
+                        paquete["cupos"] -= diferencia
                         reserva[3] = nueva_cantidad
                         print(f"Reserva ID {id_modificar} modificada con éxito.")
                     else:
@@ -61,38 +57,33 @@ def modificar_cantPersonas(id_modificar):
 # Cambia el paquete turístico de una reserva y ajusta los cupos de los paquetes involucrados.
 def modificar_paquete(id_modificar):
     # Recorre las reservas para encontrar la que coincide con el ID proporcionado
+    mostrar_paquetes()
+    print("")
     for reserva in reservas:
         if reserva[0] == id_modificar:
-            print(
-                f"ID Reserva: {reserva[0]}, Cliente ID: {reserva[1]}, Destino: {reserva[2]}, Cantidad de personas: {reserva[3]}"
-            )
-            mostrar_paquetes()
-            nuevo_paquete_id = int(input("Ingrese el ID del nuevo paquete: "))
+            try:
+                nuevo_paquete_id = int(input("Ingrese el ID del nuevo paquete: "))
+            except ValueError:
+                print("El ID del paquete debe ser un número entero.")
+                return
+
             # Validar que el ID del paquete exista y tenga cupos disponibles
-            while busqueda_secuencial_por_posicion(
-                paquetes, nuevo_paquete_id, 0
-            ) == -1 or any(
-                paquete[0] == nuevo_paquete_id and paquete[5] < reserva[3]
+            while not any(
+                paquete["id_paquete"] == nuevo_paquete_id and paquete["cupos"] >= reserva[3]
                 for paquete in paquetes
             ):
-                if (
-                    busqueda_secuencial_por_posicion(paquetes, nuevo_paquete_id, 0)
-                    == -1
-                ):
-                    print("ID de paquete no encontrado. Por favor, intente nuevamente.")
-                else:
-                    print(
-                        "El paquete seleccionado no tiene cupos disponibles. Por favor, elija otro paquete."
-                    )
-                nuevo_paquete_id = int(input("Ingrese el ID del nuevo paquete: "))
-            # Restaurar los cupos en el paquete anterior
-            for paquete in paquetes:
-                if paquete[1] == reserva[2]:
-                    paquete[5] += reserva[3]
-            # Actualizar la reserva con el nuevo paquete
-            for paquete in paquetes:
-                if paquete[0] == nuevo_paquete_id:
-                    reserva[2] = paquete[1]
-                    paquete[5] -= reserva[3]
-                    print(f"Reserva ID {id_modificar} modificada con éxito.")
+                print("ID de paquete no válido o cupos insuficientes. Intente nuevamente.")
+                try:
+                    nuevo_paquete_id = int(input("Ingrese el ID del nuevo paquete: "))
+                except ValueError:
+                    print("El ID del paquete debe ser un número entero.")
                     return
+
+            # Actualizar la reserva y los cupos de los paquetes
+            for paquete in paquetes:
+                if paquete["id_paquete"] == reserva[2]:
+                    paquete["cupos"] += reserva[3]
+                if paquete["id_paquete"] == nuevo_paquete_id:
+                    paquete["cupos"] -= reserva[3]
+                    reserva[2] = paquete["destino"]
+            print(f"Reserva ID {id_modificar} modificada con éxito.")

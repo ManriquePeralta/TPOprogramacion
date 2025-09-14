@@ -1,7 +1,10 @@
 from Clientes_Pack.lista_clientes import clientes
 def eliminar_cliente():
     print("\n=== ELIMINAR CLIENTE ===")
-    id_cliente = input("Ingrese el ID del cliente a eliminar: ")
+    id_cliente = input("Ingrese el ID del cliente a eliminar (0 para salir): ")
+    if id_cliente == "0":
+        print("Saliendo sin eliminar ningún cliente.")
+        return
 
     if not id_cliente.isdigit():
         print("❌ El ID debe ser un número.")

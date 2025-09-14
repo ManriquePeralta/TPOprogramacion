@@ -7,7 +7,7 @@ import re
 
 
 # Función para mostrar las reservas ordenadas por destino y luego preguntar por el detalle
-def mostrar_reservas():
+def mostrar_reserva():
     largo = f'{"ID Reserva":<3} | {"ID Cliente":<3} | {"Destino":<24} | {"Cant. Personas":<3}'
     ancho_total = len(largo)
 
@@ -30,31 +30,10 @@ def mostrar_reservas():
         for c in reservas_ordenados:
             print(f"{c[0]:<10} | {c[1]:<10} | {c[2]:<24} | {c[3]}")
 
-    print()  # Espacio adicional al final
-
-    # Preguntar si se desea ver una reserva detallada
-    while True:
-        id_reserva_txt = input(
-            "\nIngrese el ID de la reserva para ver el detalle o ('0' para salir): "
-        ).strip()
-        if id_reserva_txt == "0":
-            print("\nSaliendo...\n")
-            return  # Salir de la función
-
-        while re.match(r"^\d+$", id_reserva_txt) is None:
-            print("\nEntrada inválida. Debe ser un número entero positivo.\n")
-            id_reserva_txt = input(
-                "Ingrese el ID de la reserva para ver el detalle o ('0' para salir): "
-            ).strip()
-
-        id_reserva = int(id_reserva_txt)
-        indice_reserva = busqueda_secuencial_por_posicion(reservas, id_reserva, 0)
-
-        if indice_reserva == -1:
-            print("\nID de reserva no encontrado. Por favor, intente nuevamente.\n")
-        else:
-            # Obtener datos de la reserva
-            reserva = reservas[indice_reserva]
+def mostrar_detalle(id_reserva):
+    id_reserva = int(id_reserva)  # Asegurarse de que el ID sea un entero
+    for reserva in reservas:
+        if reserva[0] == id_reserva:
             id_cliente = reserva[1]
             destino = reserva[2]
             cant_personas = reserva[3]
@@ -64,29 +43,35 @@ def mostrar_reservas():
             cliente = clientes[indice_cliente] if indice_cliente != -1 else None
 
             # Obtener datos del paquete
-            indice_paquete = busqueda_secuencial_por_posicion(paquetes, destino, 1)
-            paquete = paquetes[indice_paquete] if indice_paquete != -1 else None
+            paquete = next((p for p in paquetes if p["destino"] == destino), None)
 
             # Mostrar datos relacionados de forma ordenada y visual
             print("\n=== DETALLE DE LA RESERVA ===")
             print(f"Reserva:")
             print(f"  Destino: {destino}")
             print(f"  Cantidad de personas: {cant_personas}")
+
             print("\nCliente:")
             if cliente:
                 print(f"  Nombre: {cliente[1]}")
                 print(f"  DNI: {cliente[2]}")
                 print(f"  Dirección: {cliente[3]}")
             else:
-                print("  Cliente no encontrado")
+                print("  Cliente no encontrado.")
+
             print("\nPaquete:")
             if paquete:
-                print(f"  Destino: {paquete['destino']}")
-                print(f"  Tipo: {paquete['tipo']}")
-                print(f"  Precio: ${paquete['precio']}")
-                print(f"  Fecha de salida: {paquete['fecha_inicio']}")
-                print(f"  Fecha de llegada: {paquete['fecha_fin']}")
-                print(f"  Descripcion: {paquete['descripcion']}")
+                print(f"  Precio: {paquete['precio']}")
+                print(f"  Fecha inicio: {paquete['fecha_inicio']}")
+                print(f"  Fecha fin: {paquete['fecha_fin']}")
+                print(f"  Cupos disponibles: {paquete['cupos']}")
             else:
-                print("  Paquete no encontrado")
-            print()  # Espacio adicional al final
+                print("  Paquete no encontrado.")
+
+def mostrar_detalle_interactivo():
+    while True:
+        id_reserva = input("\n\nIngrese el ID de la reserva para ver los detalles (0 para salir): ")
+        if id_reserva == "0":
+            print("Saliendo del detalle de reservas...")
+            return
+        mostrar_detalle(id_reserva)

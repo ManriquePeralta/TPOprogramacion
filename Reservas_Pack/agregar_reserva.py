@@ -47,10 +47,10 @@ def agregar_reserva():
     id_paquete = int(id_paquete_txt)
 
     # Validar que el ID del paquete exista y tenga cupos disponibles
-    while busqueda_secuencial_por_posicion(paquetes, id_paquete, 0) == -1 or any(
-        paquete[0] == id_paquete and paquete[5] == 0 for paquete in paquetes
+    while not any(paquete["id_paquete"] == id_paquete for paquete in paquetes) or any(
+        paquete["id_paquete"] == id_paquete and paquete["cupos"] == 0 for paquete in paquetes
     ):
-        if busqueda_secuencial_por_posicion(paquetes, id_paquete, 0) == -1:
+        if not any(paquete["id_paquete"] == id_paquete for paquete in paquetes):
             print("\nID de paquete no encontrado. Por favor, intente nuevamente.\n")
         else:
             print(
@@ -67,9 +67,9 @@ def agregar_reserva():
 
     # Validar que la cantidad de personas sea válida y no exceda los cupos disponibles
     for paquete in paquetes:
-        if paquete[0] == id_paquete:
-            while cantidad_personas <= 0 or cantidad_personas > paquete[5]:
-                if cantidad_personas > paquete[5]:
+        if paquete["id_paquete"] == id_paquete:
+            while cantidad_personas <= 0 or cantidad_personas > paquete["cupos"]:
+                if cantidad_personas > paquete["cupos"]:
                     print(
                         "La cantidad de personas no puede exceder los cupos disponibles. Por favor, intente nuevamente."
                     )
@@ -81,6 +81,6 @@ def agregar_reserva():
 
             # Insertar la nueva reserva en la lista de reservas
             reserva_id = max([reserva[0] for reserva in reservas], default=0) + 1
-            reservas.append([reserva_id, id_cliente, paquete[1], cantidad_personas])
-            paquete[5] -= cantidad_personas
+            reservas.append([reserva_id, id_cliente, paquete["destino"], cantidad_personas])
+            paquete["cupos"] -= cantidad_personas
             print(f"Reserva realizada con éxito. ID de reserva: {reserva_id}")

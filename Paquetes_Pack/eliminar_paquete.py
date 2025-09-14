@@ -11,13 +11,17 @@ from Paquetes_Pack.validaciones_paquete import mostrar_error
 def eliminar_paquete():
     # Función que permite eliminar un paquete por destino
     mostrar_paquetes()
-    destino_buscar = input("Ingrese el destino del paquete a eliminar: ").strip()
-    if destino_buscar == "":
-        mostrar_error("El destino no puede estar vacío.")
+    id_buscar = input("\n\nIngrese el ID del paquete a eliminar (0 para salir): ").strip()
+    if id_buscar == "0":
+        print("Saliendo sin eliminar ningún paquete.")
         return
+    if not id_buscar.isdigit():
+        mostrar_error("El ID debe ser un número válido.")
+        return
+    id_buscar = int(id_buscar)
     for p in paquetes:
-        if p["destino"].lower() == destino_buscar.lower():
+        if p["id_paquete"] == id_buscar:
             paquetes.remove(p)
             print("✅ Paquete eliminado.")
             return
-    mostrar_error("Destino no encontrado.")
+    mostrar_error("ID no encontrado.")

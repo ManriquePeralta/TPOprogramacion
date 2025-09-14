@@ -1,14 +1,7 @@
 from Clientes_Pack.lista_clientes import clientes
 def agregar_cliente():
     print("\n=== AGREGAR CLIENTE ===")
-    id_cliente = input("Ingrese el ID del cliente (número): ")
- 
-    # Validar que sea un número
-    if not id_cliente.isdigit():
-        print("❌ El ID debe ser un número.")
-        return  
-    else:
-        id_cliente = int(id_cliente)
+    id_cliente = max([c[0] for c in clientes]) + 1
  
     # Validar ID duplicado
     for c in clientes:
@@ -18,7 +11,7 @@ def agregar_cliente():
 
     nombre = input("Ingrese el nombre del cliente: ")
 
-    # Validar que el nombre no este vacio 
+    # Validar que el nombre no este vacio
     if nombre.strip() == "":
         print("❌ El nombre no puede estar vacío.")
         return
@@ -28,8 +21,8 @@ def agregar_cliente():
     if not dni.isdigit():
         print("❌ El DNI debe contener solo números.")
         return
-    if len(dni) != 6:
-        print("❌ El DNI debe tener exactamente 6 dígitos.")
+    if len(dni) != 8:
+        print("❌ El DNI debe tener exactamente 8 dígitos.")
         return
 
     # Validar DNI duplicado
@@ -46,3 +39,4 @@ def agregar_cliente():
 
     clientes.append([id_cliente, nombre, dni, email, "Activo"])
     print("✅ Cliente agregado con éxito.")
+ 

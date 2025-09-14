@@ -1,7 +1,10 @@
 from Clientes_Pack.lista_clientes import clientes
 def modificar_cliente():
     print("\n=== MODIFICAR CLIENTE ===")
-    id_cliente = input("Ingrese el ID del cliente a modificar: ")
+    id_cliente = input("Ingrese el ID del cliente a modificar (0 para salir): ")
+    if id_cliente == "0":
+        print("Saliendo sin modificar ningún cliente.")
+        return
 
     # Validación: que el ID sea un número
     if not id_cliente.isdigit():

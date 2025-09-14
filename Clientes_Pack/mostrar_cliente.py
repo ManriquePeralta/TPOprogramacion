@@ -7,8 +7,8 @@ def mostrar_clientes():
         print("⚠️ No hay clientes activos.")
         return
     else:
-        # Ordenar por DNI y luego Email
-        clientes_ordenados = sorted(clientes, key=lambda fila: (fila[2], fila[3]))
+        # Ordenar por ID en lugar de DNI y Email
+        clientes_ordenados = sorted(clientes, key=lambda fila: fila[0])
         
         # Encabezado
         print(f'{"ID":<5} | {"Nombre":<10} | {"DNI":<10} |  {"Email"} |  {"Estado"}')
@@ -19,4 +19,3 @@ def mostrar_clientes():
             print(f'{c[0]:<5} | {c[1]:<10} | {c[2]:<10} | {c[3]} | {c[4]}')
     
     return clientes_ordenados
- 
