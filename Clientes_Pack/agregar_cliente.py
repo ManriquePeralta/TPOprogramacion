@@ -28,6 +28,9 @@ def agregar_cliente():
     if not dni.isdigit():
         print("❌ El DNI debe contener solo números.")
         return
+    if len(dni) != 6:
+        print("❌ El DNI debe tener exactamente 6 dígitos.")
+        return
 
     # Validar DNI duplicado
     for c in clientes:

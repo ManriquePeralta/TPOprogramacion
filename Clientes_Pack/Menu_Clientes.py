@@ -1,4 +1,7 @@
-import Clientes_Pack
+from Clientes_Pack.mostrar_cliente import mostrar_clientes
+from Clientes_Pack.agregar_cliente import agregar_cliente
+from Clientes_Pack.modificar_cliente import modificar_cliente
+from Clientes_Pack.eliminar_cliente import eliminar_cliente
 def menu_clientes():
     op = ""
     while op != "0":
@@ -10,13 +13,13 @@ def menu_clientes():
         print("0. Volver")
         op = input("Opción: ")
         if op == "1":
-            Clientes_Pack.mostrar_clientes()
+            mostrar_clientes()
         elif op == "2":
-            Clientes_Pack.agregar_cliente()
+            agregar_cliente()
         elif op == "3":
-            Clientes_Pack.modificar_cliente()
+            modificar_cliente()
         elif op == "4":
-            Clientes_Pack.eliminar_cliente()
+            eliminar_cliente()
         elif op == "0":
             return
         else:
