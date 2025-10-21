@@ -1,6 +1,7 @@
 """Funciones auxiliares para la gestion de paquetes."""
 
 import re
+from datetime import datetime
 def mostrar_error(mensaje):
     """Imprime un mensaje de error formateado."""
     print(f"{mensaje}")
@@ -106,15 +107,30 @@ def destinos_unicos(paquetes):
 
 
 def es_fecha_valida(fecha):
-    """Verifica si la fecha tiene formato dd/mm/yyyy y solo numeros."""
-    return re.match(r"^\d{2}/\d{2}/\d{4}$", fecha or "") is not None
+    """Verifica si la fecha tiene formato dd/mm/yyyy y representa una fecha real.
+    Rechaza entradas como 34/06/2020, 12/14/2020 o 31/02/2024.
+    """
+    if not fecha or re.match(r"^\d{2}/\d{2}/\d{4}$", fecha) is None:
+        return False
+    formato = "%d/%m/%Y"
+    try:
+        datetime.strptime(fecha, formato)
+        return True
+    except ValueError:
+        return False
 
 
 def comparar_fechas(fecha_inicio, fecha_fin):
-    """Compara dos fechas en formato dd/mm/yyyy y verifica inicio <= fin."""
-    dia_i, mes_i, anio_i = [int(parte) for parte in fecha_inicio.split('/')]
-    dia_f, mes_f, anio_f = [int(parte) for parte in fecha_fin.split('/')]
-    return (anio_i, mes_i, dia_i) <= (anio_f, mes_f, dia_f)
+    """Compara dos fechas en formato dd/mm/yyyy y verifica inicio <= fin.
+    Si alguna fecha no es valida devuelve False.
+    """
+    formato = "%d/%m/%Y"
+    try:
+        inicio = datetime.strptime(fecha_inicio, formato)
+        fin = datetime.strptime(fecha_fin, formato)
+    except (ValueError, TypeError):
+        return False
+    return inicio <= fin
 
 
 def es_numero_positivo(valor):
