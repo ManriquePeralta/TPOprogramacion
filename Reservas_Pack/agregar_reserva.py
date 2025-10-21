@@ -1,86 +1,124 @@
-# Importación de funciones para mostrar paquetes y clientes
-from Paquetes_Pack.mostrar_paquetes import mostrar_paquetes
+"""Alta de reservas con validaciones y actualizacion de cupos."""
+
+from Paquetes_Pack.mostrar_paquetes import listar_paquetes
 from Clientes_Pack.mostrar_cliente import mostrar_clientes
-
-# Importación de la función para buscar posiciones en listas de reservas
-from Reservas_Pack.funciones_aux import busqueda_secuencial_por_posicion
-
-
-# Importación de listas de reservas, paquetes y clientes
+from Clientes_Pack.funciones_aux import (
+    validar_id as validar_id_cliente,
+    buscar_indice_por_id,
+    normalizar_estado as normalizar_estado_cliente,
+)
+from Reservas_Pack.funciones_aux import (
+    validar_id,
+    validar_cantidad_personas,
+    generar_nuevo_id,
+)
 from Reservas_Pack.lista_reservas import reservas
 from Paquetes_Pack.lista_paquetes import paquetes
 from Clientes_Pack.lista_clientes import clientes
 
-import re
 
-
-# Esta función permite al usuario agregar una nueva reserva, validando la entrada y actualizando los cupos disponibles en el paquete seleccionado.
 def agregar_reserva():
     print("\n\n=== RESERVAR PAQUETE ===")
 
-    # Mostrar lista de clientes disponibles
-    mostrar_clientes()
-    id_cliente_txt = input("\nIngrese su ID de cliente: ").strip()
-    while re.match(r"^\d+$", id_cliente_txt) is None:
-        print("\nEntrada inválida. Debe ser un número entero positivo.\n")
-        id_cliente_txt = input("Ingrese su ID de cliente: ").strip()
+    mostrar_clientes("activo", interactivo=False)
+    id_cliente_txt = input("\nIngrese el ID del cliente (0 para salir): ").strip()
+    if id_cliente_txt == "0":
+        print("Operacion cancelada.")
+        return
+
+    while not validar_id_cliente(id_cliente_txt):
+        print("ID invalido. Debe ser un numero positivo.")
+        id_cliente_txt = input("Ingrese el ID del cliente (0 para salir): ").strip()
+        if id_cliente_txt == "0":
+            print("Operacion cancelada.")
+            return
 
     id_cliente = int(id_cliente_txt)
-
-    # Validar que el ID del cliente exista directamente sin doble validación
-    while busqueda_secuencial_por_posicion(clientes, id_cliente, 0) == -1:
-        print("\nID de cliente no encontrado. Por favor, intente nuevamente.\n")
-        id_cliente_txt = input("Ingrese su ID de cliente: ").strip()
-        # Validación por expresiones regulares para asegurar que sea un número entero positivo
-        while re.match(r"^\d+$", id_cliente_txt) is None:
-            print("\nEntrada inválida. Debe ser un número entero positivo.\n")
-            id_cliente_txt = input("Ingrese su ID de cliente: ").strip()
+    indice_cliente = buscar_indice_por_id(clientes, id_cliente)
+    while indice_cliente == -1 or normalizar_estado_cliente(clientes[indice_cliente]["estado"]) != "activo":
+        if indice_cliente == -1:
+            print("No existe un cliente con ese ID.")
+        else:
+            print("El cliente no esta activo. Seleccione otro cliente.")
+        id_cliente_txt = input("Ingrese el ID del cliente (0 para salir): ").strip()
+        if id_cliente_txt == "0":
+            print("Operacion cancelada.")
+            return
+        while not validar_id_cliente(id_cliente_txt):
+            print("ID invalido. Debe ser un numero positivo.")
+            id_cliente_txt = input("Ingrese el ID del cliente (0 para salir): ").strip()
+            if id_cliente_txt == "0":
+                print("Operacion cancelada.")
+                return
         id_cliente = int(id_cliente_txt)
+        indice_cliente = buscar_indice_por_id(clientes, id_cliente)
 
-    # Mostrar lista de paquetes disponibles
-    mostrar_paquetes()
-    id_paquete_txt = input("\nIngrese el ID del paquete a reservar: ").strip()
-    while re.match(r"^\d+$", id_paquete_txt) is None:
-        print("\nEntrada inválida. Debe ser un número entero positivo.\n")
-        id_paquete_txt = input("Ingrese el ID del paquete a reservar: ").strip()
-
+    listar_paquetes()
+    id_paquete_txt = input("\nIngrese el ID del paquete a reservar (0 para salir): ").strip()
+    if id_paquete_txt == "0":
+        print("Operacion cancelada.")
+        return
+    while not validar_id(id_paquete_txt):
+        print("ID invalido. Debe ser un numero positivo.")
+        id_paquete_txt = input("Ingrese el ID del paquete a reservar (0 para salir): ").strip()
+        if id_paquete_txt == "0":
+            print("Operacion cancelada.")
+            return
     id_paquete = int(id_paquete_txt)
 
-    # Validar que el ID del paquete exista y tenga cupos disponibles
-    while not any(paquete["id_paquete"] == id_paquete for paquete in paquetes) or any(
-        paquete["id_paquete"] == id_paquete and paquete["cupos"] == 0 for paquete in paquetes
-    ):
-        if not any(paquete["id_paquete"] == id_paquete for paquete in paquetes):
-            print("\nID de paquete no encontrado. Por favor, intente nuevamente.\n")
+    paquete = buscar_paquete(id_paquete)
+    while paquete is None or paquete["cupos"] == 0:
+        if paquete is None:
+            print("No existe un paquete con ese ID.")
         else:
-            print(
-                "\nEl paquete seleccionado no tiene cupos disponibles. Por favor, elija otro paquete.\n"
-            )
-        id_paquete_txt = input("Ingrese el ID del paquete a reservar: ").strip()
-        while re.match(r"^\d+$", id_paquete_txt) is None:
-            print("\nEntrada inválida. Debe ser un número entero positivo.\n")
-            id_paquete_txt = input("Ingrese el ID del paquete a reservar: ").strip()
+            print("El paquete no tiene cupos disponibles.")
+        id_paquete_txt = input("Ingrese el ID del paquete a reservar (0 para salir): ").strip()
+        if id_paquete_txt == "0":
+            print("Operacion cancelada.")
+            return
+        while not validar_id(id_paquete_txt):
+            print("ID invalido. Debe ser un numero positivo.")
+            id_paquete_txt = input("Ingrese el ID del paquete a reservar (0 para salir): ").strip()
+            if id_paquete_txt == "0":
+                print("Operacion cancelada.")
+                return
         id_paquete = int(id_paquete_txt)
+        paquete = buscar_paquete(id_paquete)
 
-    # Solicitar la cantidad de personas para la reserva
-    cantidad_personas = int(input("Ingrese la cantidad de personas: "))
+    cantidad_txt = input("Cantidad de personas: ").strip()
+    while not validar_cantidad_personas(cantidad_txt):
+        print("La cantidad debe ser un numero entero mayor a 0.")
+        cantidad_txt = input("Cantidad de personas: ").strip()
+    personas = int(cantidad_txt)
 
-    # Validar que la cantidad de personas sea válida y no exceda los cupos disponibles
+    while personas > paquete["cupos"]:
+        print("La cantidad supera los cupos disponibles.")
+        cantidad_txt = input("Cantidad de personas: ").strip()
+        while not validar_cantidad_personas(cantidad_txt):
+            print("La cantidad debe ser un numero entero mayor a 0.")
+            cantidad_txt = input("Cantidad de personas: ").strip()
+        personas = int(cantidad_txt)
+
+    nuevo_id = generar_nuevo_id(reservas)
+    reservas.append(
+        {
+            "id_reserva": nuevo_id,
+            "id_cliente": id_cliente,
+            "id_paquete": id_paquete,
+            "destino": paquete["destino"],
+            "personas": personas,
+            "estado": "activa",
+            "precio_unitario": paquete.get("precio"),
+        }
+    )
+    paquete["cupos"] -= personas
+
+    nombre_cliente = clientes[indice_cliente]["nombre"]
+    print(f"Reserva creada con exito. ID: {nuevo_id} (Cliente: {nombre_cliente}).")
+
+
+def buscar_paquete(id_paquete):
     for paquete in paquetes:
         if paquete["id_paquete"] == id_paquete:
-            while cantidad_personas <= 0 or cantidad_personas > paquete["cupos"]:
-                if cantidad_personas > paquete["cupos"]:
-                    print(
-                        "La cantidad de personas no puede exceder los cupos disponibles. Por favor, intente nuevamente."
-                    )
-                elif cantidad_personas <= 0:
-                    print(
-                        "La cantidad de personas debe ser mayor a 0. Por favor, intente nuevamente."
-                    )
-                cantidad_personas = int(input("Ingrese la cantidad de personas: "))
-
-            # Insertar la nueva reserva en la lista de reservas
-            reserva_id = max([reserva[0] for reserva in reservas], default=0) + 1
-            reservas.append([reserva_id, id_cliente, paquete["destino"], cantidad_personas])
-            paquete["cupos"] -= cantidad_personas
-            print(f"Reserva realizada con éxito. ID de reserva: {reserva_id}")
+            return paquete
+    return None

@@ -1,42 +1,50 @@
+"""Alta de clientes con validaciones y asignacion automatica de ID."""
+
 from Clientes_Pack.lista_clientes import clientes
+from Clientes_Pack.funciones_aux import (
+    validar_nombre,
+    validar_dni,
+    validar_email,
+    buscar_indice_por_dni,
+)
+
+
+def generar_nuevo_id():
+    """Devuelve el siguiente ID disponible para un cliente."""
+    if not clientes:
+        return 1
+    return max(cliente.get("id", 0) for cliente in clientes) + 1
+
+
 def agregar_cliente():
     print("\n=== AGREGAR CLIENTE ===")
-    id_cliente = max([c[0] for c in clientes]) + 1
- 
-    # Validar ID duplicado
-    for c in clientes:
-        if c[0] == id_cliente:
-            print("❌ Ya existe un cliente con ese ID.")
-            return
+    nombre = input("Ingrese el nombre completo del cliente: ").strip()
+    while not validar_nombre(nombre):
+        print("Nombre invalido. Debe tener al menos 3 letras y solo contiene letras o espacios.")
+        nombre = input("Ingrese el nombre completo del cliente: ").strip()
 
-    nombre = input("Ingrese el nombre del cliente: ")
+    dni = input("Ingrese el DNI del cliente (8 digitos): ").strip()
+    while not validar_dni(dni):
+        print("DNI invalido. Debe contener exactamente 8 digitos.")
+        dni = input("Ingrese el DNI del cliente (8 digitos): ").strip()
 
-    # Validar que el nombre no este vacio
-    if nombre.strip() == "":
-        print("❌ El nombre no puede estar vacío.")
+    if buscar_indice_por_dni(clientes, dni) != -1:
+        print("Ya existe un cliente con ese DNI.")
         return
 
-    # Ingreso de DNI y validacion
-    dni = input("Ingrese el DNI del cliente (solo números): ")
-    if not dni.isdigit():
-        print("❌ El DNI debe contener solo números.")
-        return
-    if len(dni) != 8:
-        print("❌ El DNI debe tener exactamente 8 dígitos.")
-        return
+    email = input("Ingrese el email del cliente: ").strip()
+    while not validar_email(email):
+        print("Email invalido. Formato esperado ejemplo@dominio.com")
+        email = input("Ingrese el email del cliente: ").strip()
 
-    # Validar DNI duplicado
-    for c in clientes:
-        if c[2] == dni:
-            print("❌ Ya existe un cliente con ese DNI.")
-            return
-
-    # Ingreso de Email y validacion
-    email = input("Ingrese el Email del cliente: ")
-    if email.strip() == "":
-        print("❌ El email no puede estar vacío.")
-        return
-
-    clientes.append([id_cliente, nombre, dni, email, "Activo"])
-    print("✅ Cliente agregado con éxito.")
- 
+    nuevo_id = generar_nuevo_id()
+    clientes.append(
+        {
+            "id": nuevo_id,
+            "nombre": nombre,
+            "dni": dni,
+            "email": email,
+            "estado": "activo",
+        }
+    )
+    print(f"Cliente {nombre} agregado con exito. ID: {nuevo_id}")

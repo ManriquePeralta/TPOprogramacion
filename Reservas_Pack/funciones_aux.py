@@ -1,20 +1,90 @@
-# Funciones auxiliares para la gestión de reservas y paquetes turísticos
+"""Funciones auxiliares para la gestion de reservas."""
+
+import re
+
+ESTADOS_VALIDOS = ("activa", "cancelada")
 
 
-# Búsqueda secuencial para encontrar el índice del dato en la posición especificada
-def busqueda_secuencial_por_posicion(lista, dato, posicion):
-    i = 0
-    # Recorre la lista hasta encontrar el dato o llegar al final
-    while i < len(lista) and lista[i][posicion] != dato:
-        i += 1
-    # Si el dato se encuentra en la lista, devuelve su índice
-    if i < len(lista):
-        return i
-    # Si no se encuentra, devuelve -1
-    else:
-        return -1
+def normalizar_estado(estado):
+    """Devuelve el estado en minusculas y sin espacios extra."""
+    return estado.strip().lower()
 
 
-# Ordena una lista de listas por el valor en el índice especificado
-def ordenar_lista(lista, indice):
-    return sorted(lista, key=lambda x: x[indice])
+def formatear_estado(estado):
+    """Formatea un estado para mostrarlo con mayuscula inicial."""
+    return normalizar_estado(estado).capitalize()
+
+
+def validar_id(texto):
+    """Valida que el texto represente un numero entero positivo."""
+    return bool(re.match(r"^\d+$", texto or ""))
+
+
+def validar_cantidad_personas(texto):
+    """Valida que represente una cantidad mayor o igual a 1."""
+    return bool(re.match(r"^[1-9]\d*$", texto or ""))
+
+
+def generar_nuevo_id(reservas):
+    """Obtiene el siguiente ID disponible a partir de la lista de reservas."""
+    if not reservas:
+        return 1
+    return max(reserva["id_reserva"] for reserva in reservas) + 1
+
+
+def ordenar_reservas(reservas, clave="id_reserva"):
+    """Devuelve una nueva lista de reservas ordenada por la clave indicada."""
+    return sorted(reservas, key=lambda reserva: reserva[clave])
+
+
+def buscar_indice_por_id(reservas, id_reserva):
+    """Devuelve el indice de la reserva con el ID indicado, o -1 si no existe."""
+    indices = {
+        reservas[indice]["id_reserva"]: indice
+        for indice in range(len(reservas))
+    }
+    return indices.get(id_reserva, -1)
+
+
+def obtener_reserva_por_id(reservas, id_reserva):
+    """Devuelve la reserva con el ID indicado, o None si no existe."""
+    indice = buscar_indice_por_id(reservas, id_reserva)
+    return reservas[indice] if indice != -1 else None
+
+
+def reservas_por_estado(reservas, estado_buscado):
+    """Filtra las reservas por estado (case insensitive)."""
+    estado_buscado = normalizar_estado(estado_buscado)
+    return [reserva for reserva in reservas if normalizar_estado(reserva["estado"]) == estado_buscado]
+
+
+def contar_por_estado(reservas):
+    """Cuenta cuantas reservas hay por estado."""
+    conteo = {}
+    for reserva in reservas:
+        estado = normalizar_estado(reserva["estado"])
+        conteo[estado] = conteo.get(estado, 0) + 1
+    return conteo
+
+
+def reservas_por_cliente(reservas, id_cliente, solo_activas=False):
+    """Obtiene las reservas de un cliente, opcionalmente solo activas."""
+    resultado = []
+    for reserva in reservas:
+        if reserva["id_cliente"] == id_cliente:
+            if solo_activas and normalizar_estado(reserva["estado"]) != "activa":
+                continue
+            resultado.append(reserva)
+    return resultado
+
+
+def reservas_por_paquete(reservas, id_paquete, solo_activas=False):
+    """Devuelve reservas asociadas a un paquete determinado."""
+    seleccionadas = []
+    for reserva in reservas:
+        if reserva["id_paquete"] == id_paquete:
+            if solo_activas and normalizar_estado(reserva["estado"]) != "activa":
+                continue
+            seleccionadas.append(reserva)
+    return seleccionadas
+

@@ -1,77 +1,155 @@
-# Importar funciones auxiliares y listas
-from Reservas_Pack.funciones_aux import ordenar_lista, busqueda_secuencial_por_posicion
-from Clientes_Pack.lista_clientes import clientes
-from Paquetes_Pack.lista_paquetes import paquetes
+"""Funciones para listar reservas y mostrar sus detalles."""
+
 from Reservas_Pack.lista_reservas import reservas
-import re
+from Reservas_Pack.funciones_aux import (
+    ordenar_reservas,
+    reservas_por_estado,
+    contar_por_estado,
+    validar_id,
+    obtener_reserva_por_id,
+    formatear_estado,
+)
+from Clientes_Pack.lista_clientes import clientes
+from Clientes_Pack.funciones_aux import buscar_indice_por_id as buscar_cliente_por_id
+from Clientes_Pack.funciones_aux import formatear_estado as formatear_estado_cliente
+from Paquetes_Pack.lista_paquetes import paquetes
 
 
-# Función para mostrar las reservas ordenadas por destino y luego preguntar por el detalle
-def mostrar_reserva():
-    largo = f'{"ID Reserva":<3} | {"ID Cliente":<3} | {"Destino":<24} | {"Cant. Personas":<3}'
-    ancho_total = len(largo)
-
-    print(f'\n\n{" LISTA DE RESERVAS ":=^{ancho_total}}\n')
-
-    if len(reservas) == 0:
-        print("No hay reservas registradas.\n")
-        return
+def mostrar_reservas(estado=None, interactivo=True):
+    """Muestra las reservas con opcion de filtro por estado."""
+    if estado is not None:
+        listado = reservas_por_estado(reservas, estado)
+        titulo = f"Reservas ({formatear_estado(estado)})"
     else:
-        # Ordenar reservas usando la función ordenar_lista
-        reservas_ordenados = ordenar_lista(reservas, 0)  # Ordenar por ID de reserva
+        listado = reservas
+        titulo = "Lista de reservas"
 
-        # Encabezado
+    if not listado:
+        mensaje = "No hay reservas registradas." if estado is None else f"No hay reservas con estado {estado}."
+        print(f"\n{mensaje}\n")
+        return []
+
+    reservas_ordenadas = ordenar_reservas(listado)
+    encabezado = f"{'ID':<4} | {'Cliente':<18} | {'Destino':<24} | {'Personas':<8} | {'Estado':<10}"
+    ancho = len(encabezado)
+
+    print(f"\n{titulo:=^{ancho}}")
+    print(encabezado)
+    print("-" * ancho)
+
+    for reserva in reservas_ordenadas:
+        cliente = obtener_cliente(reserva["id_cliente"])
+        paquete = obtener_paquete(reserva["id_paquete"])
+        nombre_cliente = cliente["nombre"] if cliente else "Desconocido"
+        destino = reserva.get("destino") or (paquete["destino"] if paquete else "Sin datos")
         print(
-            f'{"ID Reserva":<3} | {"ID Cliente":<3} | {"Destino":<24} | {"Cant. Personas":<3}'
+            f"{reserva['id_reserva']:<4} | {nombre_cliente:<18} | {destino:<24} | {reserva['personas']:<8} | {formatear_estado(reserva['estado']):<10}"
         )
-        print("-" * 67)
 
-        # Filas
-        for c in reservas_ordenados:
-            print(f"{c[0]:<10} | {c[1]:<10} | {c[2]:<24} | {c[3]}")
+    if estado is None:
+        imprimir_resumen_estados()
 
-def mostrar_detalle(id_reserva):
-    id_reserva = int(id_reserva)  # Asegurarse de que el ID sea un entero
-    for reserva in reservas:
-        if reserva[0] == id_reserva:
-            id_cliente = reserva[1]
-            destino = reserva[2]
-            cant_personas = reserva[3]
+    if interactivo and estado is None:
+        mostrar_detalle_interactivo()
 
-            # Obtener datos del cliente
-            indice_cliente = busqueda_secuencial_por_posicion(clientes, id_cliente, 0)
-            cliente = clientes[indice_cliente] if indice_cliente != -1 else None
+    return reservas_ordenadas
 
-            # Obtener datos del paquete
-            paquete = next((p for p in paquetes if p["destino"] == destino), None)
 
-            # Mostrar datos relacionados de forma ordenada y visual
-            print("\n=== DETALLE DE LA RESERVA ===")
-            print(f"Reserva:")
-            print(f"  Destino: {destino}")
-            print(f"  Cantidad de personas: {cant_personas}")
+def imprimir_resumen_estados():
+    """Muestra un pequeno resumen por estado."""
+    conteo = contar_por_estado(reservas)
+    if not conteo:
+        return
+    print("\nResumen por estado:")
+    for estado, cantidad in sorted(conteo.items()):
+        print(f"  {formatear_estado(estado)}: {cantidad}")
 
-            print("\nCliente:")
-            if cliente:
-                print(f"  Nombre: {cliente[1]}")
-                print(f"  DNI: {cliente[2]}")
-                print(f"  Dirección: {cliente[3]}")
-            else:
-                print("  Cliente no encontrado.")
-
-            print("\nPaquete:")
-            if paquete:
-                print(f"  Precio: {paquete['precio']}")
-                print(f"  Fecha inicio: {paquete['fecha_inicio']}")
-                print(f"  Fecha fin: {paquete['fecha_fin']}")
-                print(f"  Cupos disponibles: {paquete['cupos']}")
-            else:
-                print("  Paquete no encontrado.")
 
 def mostrar_detalle_interactivo():
+    """Permite seleccionar una reserva y ver el detalle."""
     while True:
-        id_reserva = input("\n\nIngrese el ID de la reserva para ver los detalles (0 para salir): ")
-        if id_reserva == "0":
-            print("Saliendo del detalle de reservas...")
+        opcion = input("\nIngrese el ID de la reserva para ver detalle (0 para volver): ").strip()
+        if opcion == "0":
+            print("Volviendo al menu de reservas...")
             return
-        mostrar_detalle(id_reserva)
+        if not validar_id(opcion):
+            print("ID invalido. Debe ser un numero positivo.")
+            continue
+        mostrar_detalle_reserva(int(opcion))
+
+
+def mostrar_detalle_reserva(id_reserva):
+    """Muestra la informacion completa de una reserva."""
+    reserva = obtener_reserva_por_id(reservas, id_reserva)
+    if reserva is None:
+        print(f"\nNo se encontro una reserva con ID {id_reserva}.")
+        return
+
+    cliente = obtener_cliente(reserva["id_cliente"])
+    paquete = obtener_paquete(reserva["id_paquete"])
+    destino_reserva = reserva.get("destino") or (paquete["destino"] if paquete else "Sin datos")
+
+    print("\n" + "=" * 60)
+    print(f"DETALLE DE LA RESERVA ID {reserva['id_reserva']}")
+    print("=" * 60)
+
+    print("Reserva")
+    print(f"  Cliente ID .....: {reserva['id_cliente']}")
+    print(f"  Paquete ID .....: {reserva['id_paquete']}")
+    print(f"  Destino ........: {destino_reserva}")
+    print(f"  Personas .......: {reserva['personas']}")
+    print(f"  Estado .........: {formatear_estado(reserva['estado'])}")
+
+    precio_unitario = reserva.get('precio_unitario')
+    if precio_unitario is None and paquete:
+        precio_unitario = paquete.get('precio')
+    if precio_unitario is not None:
+        precio_unitario = float(precio_unitario)
+        precio_total = precio_unitario * int(reserva.get('personas', 0))
+    else:
+        precio_total = None
+
+    print("\nResumen economico")
+    if precio_total is not None:
+        print(f"  Precio unitario : ${precio_unitario:.2f}")
+        print(f"  Precio estimado : ${precio_total:.2f}")
+    else:
+        print("  No disponible (paquete eliminado).")
+
+    print("\nCliente asociado")
+    if cliente:
+        print(f"  Nombre .........: {cliente['nombre']}")
+        print(f"  DNI ............: {cliente['dni']}")
+        print(f"  Email ..........: {cliente['email']}")
+        print(f"  Estado .........: {formatear_estado_cliente(cliente['estado'])}")
+    else:
+        print("  No se encontro informacion del cliente.")
+
+    print("\nPaquete asociado")
+    if paquete:
+        print(f"  Destino ........: {paquete['destino']}")
+        print(f"  Tipo ...........: {paquete['tipo']}")
+        print(f"  Precio .........: ${paquete['precio']}")
+        print(f"  Fechas .........: {paquete['fecha_inicio']} -> {paquete['fecha_fin']}")
+        print(f"  Cupos restantes : {paquete['cupos']}")
+    else:
+        print("  Paquete no registrado.")
+
+
+def obtener_cliente(id_cliente):
+    indice = buscar_cliente_por_id(clientes, id_cliente)
+    if indice == -1:
+        return None
+    return clientes[indice]
+
+
+def obtener_paquete(id_paquete):
+    for paquete in paquetes:
+        if paquete["id_paquete"] == id_paquete:
+            return paquete
+    return None
+
+
+# Alias para compatibilidad con codigo existente
+mostrar_reserva = mostrar_reservas
+mostrar_detalle = mostrar_detalle_reserva

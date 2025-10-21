@@ -1,117 +1,266 @@
-import sys
-import os
-# Agregar la raíz del proyecto al PYTHONPATH
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+"""Estadisticas y reportes del modulo de reservas."""
 
-
-# Importar la lista de reservas
 from Reservas_Pack.lista_reservas import reservas
-
-# Importar la función ordenar_lista
-from Reservas_Pack.funciones_aux import ordenar_lista
-
-
-# Función para calcular el total de reservas
-def total_reservas():
-    return len(reservas)
+from Reservas_Pack.funciones_aux import ordenar_reservas, reservas_por_estado
+from Clientes_Pack.lista_clientes import clientes
+from Clientes_Pack.funciones_aux import formatear_estado as formatear_estado_cliente
+from Paquetes_Pack.lista_paquetes import paquetes
 
 
-# Función para calcular el promedio de personas por reserva
-def promedio_personas():
-    if not reservas:
-        return 0
-    return sum(reserva[3] for reserva in reservas) / total_reservas()
-
-
-# Función para encontrar el máximo de personas por reserva
-def max_personas():
-    if not reservas:
-        return 0
-    return max(reservas, key=lambda x: x[3])[3]
-
-
-# Función para encontrar el mínimo de personas por reserva
-def min_personas():
-    if not reservas:
-        return 0
-    return min(reservas, key=lambda x: x[3])[3]
-
-
-# Función para calcular el conteo por categoría (destino)
-def conteo_por_categoria():
-    conteo_categorias = {}
-    for reserva in reservas:
-        destino = reserva[2]
-        if destino in conteo_categorias:
-            conteo_categorias[destino] += 1
-        else:
-            conteo_categorias[destino] = 1
-    return conteo_categorias
-
-
-# Función para calcular los porcentajes por categoría
-def porcentajes_por_categoria():
-    conteo_categorias = conteo_por_categoria()
-    total = total_reservas()
-    return {
-        destino: (conteo / total) * 100 for destino, conteo in conteo_categorias.items()
-    }
-
-
-# Función principal para mostrar las estadísticas (salida más clara)
 def estadisticas_reservas():
     if not reservas:
-        print("\nNo hay reservas registradas para calcular estadísticas.\n")
+        print("No hay reservas registradas para generar estadisticas.")
         return
 
-    # Ordenar reservas por destino antes de calcular estadísticas (no afecta resultados)
-    reservas_ordenadas = ordenar_lista(reservas, 2)  # Ordenar por destino
+    normalizadas = [normalizar_reserva(reserva) for reserva in reservas]
 
-    # Resumen desempaquetado (tupla -> variables)
-    total, prom, maximo, minimo = resumen_basico()
+    total = len(normalizadas)
+    activas = sum(1 for r in normalizadas if r['estado'] == 'activa')
+    canceladas = sum(1 for r in normalizadas if r['estado'] == 'cancelada')
 
-    print("\n\n=== ESTADÍSTICAS DE RESERVAS ===")
-    print(f"Total de reservas: {len(reservas_ordenadas)}")
-    print(f"Promedio de personas por reserva: {prom:.2f}")
-    print(f"Máximo de personas en una reserva: {maximo}")
-    print(f"Mínimo de personas en una reserva: {minimo}")
+    personas_total = sum(r['personas'] for r in normalizadas)
+    promedio_personas = personas_total / total if total else 0
 
-    # Conteo por destino (orden alfabético)
-    print("\nConteo por destino:")
-    conteo = conteo_por_categoria()
-    for destino in sorted(conteo.keys()):
-        print(f"  {destino}: {conteo[destino]} reservas")
+    print("=== ESTADISTICAS DE RESERVAS ===")
+    print("Reservas")
+    print(f"  Total ..........: {total}")
+    print(f"  Activas ........: {activas}")
+    print(f"  Canceladas .....: {canceladas}")
 
-    # Porcentajes por destino (orden alfabético)
-    print("\nPorcentajes por destino:")
-    porcentajes = porcentajes_por_categoria()
-    for destino in sorted(porcentajes.keys()):
-        print(f"  {destino}: {porcentajes[destino]:.2f}%")
+    print("Personas")
+    print(f"  Total ..........: {personas_total}")
+    print(f"  Promedio por reserva: {promedio_personas:.2f}")
 
-    # Set (destinos únicos) y Tupla (resumen) 
-    print("\nDestinos únicos:", destinos_unicos())
+    resumen_estados = personas_por_estado(normalizadas)
+    if resumen_estados:
+        for estado, info in resumen_estados.items():
+            print(f"  {estado:<10} -> {info['reservas']} reservas / {info['personas']} personas")
 
-    print("\nResumen de reservas:")
-    print(f"  Total: {total}")
-    print(f"  Promedio: {prom:.2f}")
-    print(f"  Máximo: {maximo}")
-    print(f"  Mínimo: {minimo}")
+    clientes_destacados = top_clientes(normalizadas)
+    print()
+    print("Clientes destacados")
+    if clientes_destacados:
+        idx = 1
+        for data in clientes_destacados:
+            print(
+                f"  #{idx} {data['nombre']} (ID {data['id']}) - "
+                f"{data['reservas']} reservas, {data['personas']} personas"
+            )
+            idx += 1
+    else:
+        print("  No hay clientes con reservas registradas.")
+
+    destinos_destacados = top_destinos(normalizadas)
+    print()
+    print("Destinos favoritos")
+    if destinos_destacados:
+        idx = 1
+        for data in destinos_destacados:
+            print(
+                f"  #{idx} {data['destino']} - {data['reservas']} reservas, {data['personas']} personas"
+            )
+            idx += 1
+    else:
+        print("  Sin destinos registrados.")
+
+    paquetes_destacados = top_paquetes(normalizadas)
+    print()
+    print("Paquetes con mayor demanda")
+    if paquetes_destacados:
+        idx = 1
+        for data in paquetes_destacados:
+            linea = (
+                f"  #{idx} ID {data['id']} - {data['destino']} | {data['reservas']} reservas"
+            )
+            if data['ingresos'] is not None:
+                linea += f" | Ingreso estimado: ${data['ingresos']:.2f}"
+            print(linea)
+            idx += 1
+    else:
+        print("  No hay paquetes asociados a reservas.")
+
+    print()
+    print("Reservas recientes")
+    for reserva in ordenar_reservas(normalizadas)[-3:]:
+        cliente = buscar_cliente(reserva['id_cliente'])
+        nombre_cliente = cliente['nombre'] if cliente else "Desconocido"
+        print(
+            f"  ID {reserva['id_reserva']:>3} | Cliente {nombre_cliente:<20} | "
+            f"Destino {reserva['destino']:<18} | Estado {reserva['estado'].capitalize()}"
+        )
+
     print()
 
 
-def destinos_unicos():
-    """Devuelve lista de destinos sin duplicados (usa set)."""
-    s = set()
-    i = 0
-    while i < len(reservas):
-        s.add(reservas[i][2])  # destino en columna 2
-        i += 1
-    return list(s)
+def normalizar_reserva(reserva):
+    if type(reserva) is dict:
+        destino = reserva.get('destino')
+        paquete = buscar_paquete(reserva.get('id_paquete'))
+        if destino is None and paquete:
+            destino = paquete.get('destino')
+        precio_unitario = reserva.get('precio_unitario')
+        if precio_unitario is None and paquete:
+            precio_unitario = paquete.get('precio')
+        return {
+            'id_reserva': reserva.get('id_reserva'),
+            'id_cliente': reserva.get('id_cliente'),
+            'id_paquete': reserva.get('id_paquete'),
+            'destino': destino or 'Sin datos',
+            'personas': to_int(reserva.get('personas', 0)),
+            'estado': reserva.get('estado', 'activa').lower(),
+            'precio_unitario': precio_unitario,
+        }
+
+    destino = reserva[2] if len(reserva) > 2 else 'Sin datos'
+    paquete = buscar_paquete_por_destino(destino)
+    precio_unitario = paquete.get('precio') if paquete else None
+    return {
+        'id_reserva': reserva[0],
+        'id_cliente': reserva[1] if len(reserva) > 1 else None,
+        'id_paquete': paquete.get('id_paquete') if paquete else None,
+        'destino': destino,
+        'personas': to_int(reserva[3]) if len(reserva) > 3 else 0,
+        'estado': 'activa',
+        'precio_unitario': precio_unitario,
+    }
+
+def personas_por_estado(reservas_normalizadas):
+    resumen = {}
+    for reserva in reservas_normalizadas:
+        estado = reserva['estado']
+        if estado not in resumen:
+            resumen[estado] = {'reservas': 0, 'personas': 0}
+        resumen[estado]['reservas'] += 1
+        resumen[estado]['personas'] += reserva['personas']
+    return {
+        estado.capitalize(): datos for estado, datos in resumen.items()
+    }
 
 
-def resumen_basico():
-    """Devuelve (total, promedio, max_personas, min_personas) como tupla."""
-    t = total_reservas()
-    if t == 0:
-        return (0, 0.0, 0, 0)
-    return (t, promedio_personas(), max_personas(), min_personas())
+def top_clientes(reservas_normalizadas, limite=3):
+    conteo = {}
+    for reserva in reservas_normalizadas:
+        cid = reserva['id_cliente']
+        if cid not in conteo:
+            conteo[cid] = {'reservas': 0, 'personas': 0}
+        conteo[cid]['reservas'] += 1
+        conteo[cid]['personas'] += reserva['personas']
+
+    ranking = []
+    for cid, datos in conteo.items():
+        cliente = buscar_cliente(cid)
+        if not cliente:
+            continue
+        ranking.append({
+            'id': cliente['id'],
+            'nombre': cliente['nombre'],
+            'reservas': datos['reservas'],
+            'personas': datos['personas'],
+        })
+
+    ranking.sort(key=lambda item: (-item['reservas'], -item['personas'], item['nombre']))
+    return ranking[:limite]
+
+
+def top_destinos(reservas_normalizadas, limite=3):
+    conteo = {}
+    for reserva in reservas_normalizadas:
+        destino = reserva['destino']
+        if destino not in conteo:
+            conteo[destino] = {'reservas': 0, 'personas': 0}
+        conteo[destino]['reservas'] += 1
+        conteo[destino]['personas'] += reserva['personas']
+
+    ranking = [
+        {
+            'destino': destino,
+            'reservas': datos['reservas'],
+            'personas': datos['personas'],
+        }
+        for destino, datos in conteo.items()
+    ]
+    ranking.sort(key=lambda item: (-item['reservas'], -item['personas'], item['destino']))
+    return ranking[:limite]
+
+
+def top_paquetes(reservas_normalizadas, limite=3):
+    conteo = {}
+    for reserva in reservas_normalizadas:
+        paquete = buscar_paquete(reserva['id_paquete'])
+        if not paquete:
+            continue
+        pid = paquete['id_paquete']
+        if pid not in conteo:
+            conteo[pid] = {
+                'reservas': 0,
+                'personas': 0,
+                'ingresos': 0.0,
+                'destino': 'Sin datos',
+            }
+        conteo[pid]['reservas'] += 1
+        conteo[pid]['personas'] += reserva['personas']
+        conteo[pid]['destino'] = paquete['destino']
+        precio_unitario = reserva.get('precio_unitario')
+        if precio_unitario is None:
+            precio_unitario = paquete.get('precio')
+        if conteo[pid]['ingresos'] is not None and precio_unitario is not None:
+            try:
+                conteo[pid]['ingresos'] += float(precio_unitario) * reserva['personas']
+            except (TypeError, ValueError):
+                conteo[pid]['ingresos'] = None
+
+    ranking = []
+    for pid, datos in conteo.items():
+        ranking.append({
+            'id': pid,
+            'destino': datos['destino'],
+            'reservas': datos['reservas'],
+            'personas': datos['personas'],
+            'ingresos': datos['ingresos'],
+        })
+    ranking.sort(key=lambda item: (-item['reservas'], -item['personas']))
+    return ranking[:limite]
+
+
+    ranking = []
+    for pid, datos in conteo.items():
+        ranking.append({
+            'id': pid,
+            'destino': datos['destino'],
+            'reservas': datos['reservas'],
+            'personas': datos['personas'],
+            'ingresos': datos['ingresos'],
+        })
+    ranking.sort(key=lambda item: (-item['reservas'], -item['personas']))
+    return ranking[:limite]
+
+
+def buscar_cliente(id_cliente):
+    for cliente in clientes:
+        if cliente.get('id') == id_cliente:
+            return cliente
+    return None
+
+
+def buscar_paquete(id_paquete):
+    if id_paquete is None:
+        return None
+    for paquete in paquetes:
+        if paquete.get('id_paquete') == id_paquete:
+            return paquete
+    return None
+
+
+def buscar_paquete_por_destino(destino):
+    for paquete in paquetes:
+        if paquete.get('destino', '').lower() == (destino or '').lower():
+            return paquete
+    return None
+
+
+def to_int(valor):
+    try:
+        return int(valor)
+    except (TypeError, ValueError):
+        return 0
+

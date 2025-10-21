@@ -1,58 +1,74 @@
+"""Alta de paquetes con validaciones y asignacion automatica de ID."""
 
-# Importación de la lista de paquetes y funciones de validación
 from Paquetes_Pack.lista_paquetes import paquetes
-from Paquetes_Pack.validaciones_paquete import es_fecha_valida, es_numero_positivo, mostrar_error, comparar_fechas
+from Paquetes_Pack.funciones_aux import (
+    generar_nuevo_id,
+    buscar_paquete_por_destino,
+    mostrar_error,
+    es_numero_positivo,
+    es_fecha_valida,
+    comparar_fechas,
+)
 
 
-# Esta función permite al usuario agregar un nuevo paquete turístico, validando la entrada y agregando el paquete a la lista global.
 def agregar_paquete():
     print("\n=== AGREGAR PAQUETE ===")
 
-    # Solicitar destino y validar que no esté vacío
     destino = input("Destino: ").strip()
     if destino == "":
-        mostrar_error("El destino no puede estar vacío.")
+        mostrar_error("El destino no puede estar vacio.")
         return
 
-    # Solicitar precio y validar que sea un número positivo
-    precio = input("Precio: ").strip()
-    if not es_numero_positivo(precio):
-        mostrar_error("El precio debe ser un número positivo.")
+    if buscar_paquete_por_destino(paquetes, destino):
+        mostrar_error("Ya existe un paquete con ese destino.")
         return
 
-    # Solicitar fechas y validar formato y lógica
+    precio_txt = input("Precio: ").strip()
+    if not es_numero_positivo(precio_txt):
+        mostrar_error("El precio debe ser un numero positivo.")
+        return
+
     fecha_inicio = input("Fecha inicio (dd/mm/yyyy): ").strip()
     fecha_fin = input("Fecha fin (dd/mm/yyyy): ").strip()
+
     if not es_fecha_valida(fecha_inicio) or not es_fecha_valida(fecha_fin):
-        mostrar_error("Las fechas deben tener el formato dd/mm/yyyy y solo números.")
+        mostrar_error("Las fechas deben tener el formato dd/mm/yyyy.")
         return
-    if fecha_inicio == "" or fecha_fin == "":
-        mostrar_error("Las fechas no pueden estar vacías.")
-        return
+
     if not comparar_fechas(fecha_inicio, fecha_fin):
-        mostrar_error("La fecha de finalizacion no puede ser anterior a la de inicio.")
+        mostrar_error("La fecha de fin no puede ser anterior a la de inicio.")
         return
 
-    # Solicitar cupos y validar que sea un número positivo
-    cupos = input("Cupos: ").strip()
-    if not es_numero_positivo(cupos):
-        mostrar_error("Los cupos deben ser un número positivo.")
+    cupos_txt = input("Cupos disponibles: ").strip()
+    if not es_numero_positivo(cupos_txt):
+        mostrar_error("Los cupos deben ser un numero entero positivo.")
         return
 
-    # Solicitar tipo y descripción
-    tipo = input("Tipo: ").strip()
-    descripcion = input("Descripción: ").strip()
+    tipo = input("Tipo (Estandar/Premium/Full) [Estandar]: ").strip()
+    if tipo == "":
+        tipo = "Estandar"
+    tipo_normalizado = tipo.capitalize()
+    opciones_tipo = ["Estandar", "Premium", "Full"]
+    if tipo_normalizado not in opciones_tipo:
+        mostrar_error("Tipo invalido. Opciones: Estandar, Premium o Full.")
+        return
 
-    # Crear el diccionario del paquete y agregarlo a la lista global
+    descripcion = input("Descripcion: ").strip()
+    if descripcion == "":
+        mostrar_error("La descripcion no puede estar vacia.")
+        return
+
+    nuevo_id = generar_nuevo_id(paquetes)
     paquete = {
-        "id_paquete": max([p["id_paquete"] for p in paquetes]) + 1,
+        "id_paquete": nuevo_id,
         "destino": destino,
-        "precio": int(precio),
+        "precio": int(precio_txt),
         "fecha_inicio": fecha_inicio,
         "fecha_fin": fecha_fin,
-        "cupos": int(cupos),
-        "tipo": tipo,
-        "descripcion": descripcion
+        "cupos": int(cupos_txt),
+        "tipo": tipo_normalizado,
+        "descripcion": descripcion,
     }
     paquetes.append(paquete)
-    print("✅ Paquete agregado.")
+
+    print(f"Paquete a {destino} agregado con exito. ID: {paquete['id_paquete']}")

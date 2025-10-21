@@ -35,7 +35,7 @@ paquetes = [
         "precio": 200000,
         "fecha_inicio": "01/12/2025",
         "fecha_fin": "08/12/2025",
-        "cupos": 15,
+        "cupos": "15",
         "tipo": "Full",
         "descripcion": "Sky Week Premium Pass"
     }
