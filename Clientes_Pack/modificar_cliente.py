@@ -1,6 +1,5 @@
-"""Modificacion de datos de clientes con validaciones adicionales."""
+# Modificacion de datos de clientes con validaciones adicionales.
 
-from Clientes_Pack.lista_clientes import clientes
 from Clientes_Pack.funciones_aux import (
     validar_id,
     validar_nombre,
@@ -10,83 +9,104 @@ from Clientes_Pack.funciones_aux import (
     buscar_indice_por_dni,
     normalizar_estado,
     formatear_estado,
+    cargar_clientes_desde_archivo,
+    guardar_clientes_en_archivo,
 )
 from Clientes_Pack.mostrar_cliente import mostrar_clientes
 
-ESTADOS_PERMITIDOS = ["activo", "inactivo", "suspendido"]
-
-
+# Modifica los datos de un cliente existente.
 def modificar_cliente():
     print("\n=== MODIFICAR CLIENTE ===")
-    listado = mostrar_clientes(interactivo=False)
+
+    # Muestra el listado de clientes
+    listado = mostrar_clientes()
     if not listado:
         return
+    
+    # Carga los clientes actuales
+    clientes_actuales = cargar_clientes_desde_archivo()
 
-    id_cliente_txt = input("\nIngrese el ID del cliente a modificar (0 para salir): ").strip()
-
-    if id_cliente_txt == "0":
-        print("Operacion cancelada. No se modifico ningun cliente.")
-        return
-
-    while not validar_id(id_cliente_txt):
-        print("ID invalido. Debe ser un numero positivo.")
-        id_cliente_txt = input("Ingrese el ID del cliente a modificar (0 para salir): ").strip()
-        if id_cliente_txt == "0":
+    # Solicita el ID del cliente a modificar y valida
+    id_cliente = input("\nIngrese el ID del cliente a modificar (0 para salir): ").strip()
+    while not validar_id(id_cliente):
+        if id_cliente == "0":
             print("Operacion cancelada. No se modifico ningun cliente.")
             return
-
-    id_cliente = int(id_cliente_txt)
-    indice = buscar_indice_por_id(clientes, id_cliente)
-
+        print("ID invalido. Debe ser un numero positivo.")
+        id_cliente = input("Ingrese el ID del cliente a modificar (0 para salir): ").strip()
+    if id_cliente == "0":
+        print("Operacion cancelada. No se modifico ningun cliente.")
+        return
+    
+    # Convierte el ID a entero y busca el cliente
+    id_cliente = int(id_cliente)
+    indice = buscar_indice_por_id(clientes_actuales, id_cliente)
     if indice == -1:
         print(f"No se encontro un cliente con ID {id_cliente}.")
         return
-
-    cliente = clientes[indice]
+   
+    # Obtiene el cliente a modificar
+    cliente = clientes_actuales[indice]
     print(f"Cliente seleccionado: {cliente['nombre']} (Estado actual: {formatear_estado(cliente['estado'])})")
+   
+    # Actualiza los campos del cliente
+    actualizar_nombre(cliente)
+    actualizar_dni(clientes_actuales, cliente, indice)
+    actualizar_email(cliente)
+    actualizar_estado(cliente)
 
+    # Guarda los cambios en el archivo
+    if guardar_clientes_en_archivo(clientes_actuales):
+        print(f"Cliente ID {id_cliente} actualizado correctamente.")
+    else:
+        print("No se pudieron guardar los cambios del cliente.")
+
+# Actualiza el nombre del cliente 
+def actualizar_nombre(cliente):
+    # solicita el nuevo nombre y valida
     nuevo_nombre = input("Nuevo nombre (dejar vacio para mantener): ").strip()
+    while nuevo_nombre and not validar_nombre(nuevo_nombre):
+        print("Nombre invalido. Debe tener al menos 3 letras y solo letras o espacios.")
+        nuevo_nombre = input("Nuevo nombre (dejar vacio para mantener): ").strip()
     if nuevo_nombre:
-        while not validar_nombre(nuevo_nombre):
-            print("Nombre invalido. Debe tener al menos 3 letras y solo contiene letras o espacios.")
-            nuevo_nombre = input("Nuevo nombre (dejar vacio para mantener): ").strip()
         cliente["nombre"] = nuevo_nombre
 
+# Actualiza el DNI del cliente 
+def actualizar_dni(clientes, cliente, posicion_actual):
+    # solicita el nuevo DNI y valida
     nuevo_dni = input("Nuevo DNI (dejar vacio para mantener): ").strip()
-    if nuevo_dni:
-        while not validar_dni(nuevo_dni):
-            print("DNI invalido. Debe contener exactamente 8 digitos.")
-            nuevo_dni = input("Nuevo DNI (dejar vacio para mantener): ").strip()
-            if not nuevo_dni:
-                break
-        if nuevo_dni:
-            indice_dni = buscar_indice_por_dni(clientes, nuevo_dni)
-            if indice_dni != -1 and indice_dni != indice:
-                print("Ese DNI ya esta asignado a otro cliente. No se realizaron cambios en el DNI.")
-            else:
-                cliente["dni"] = nuevo_dni
+    while nuevo_dni and not validar_dni(nuevo_dni):
+        print("DNI invalido. Debe contener exactamente 8 digitos.")
+        nuevo_dni = input("Nuevo DNI (dejar vacio para mantener): ").strip()
+    # Verifica si se dejo el campo vacio
+    if not nuevo_dni:
+        return
+    # Verifica que el DNI no esté en uso por otro cliente
+    indice_dni = buscar_indice_por_dni(clientes, nuevo_dni)
+    if indice_dni != -1 and indice_dni != posicion_actual:
+        print("Ese DNI ya esta asignado a otro cliente. Se mantiene el DNI original.")
+        return
 
+    cliente["dni"] = nuevo_dni
+
+# Actualiza el email del cliente
+def actualizar_email(cliente):
+    # solicita el nuevo email y valida
     nuevo_email = input("Nuevo email (dejar vacio para mantener): ").strip()
+    while nuevo_email and not validar_email(nuevo_email):
+        print("Email invalido. Formato esperado ejemplo@dominio.com")
+        nuevo_email = input("Nuevo email (dejar vacio para mantener): ").strip()
     if nuevo_email:
-        while not validar_email(nuevo_email):
-            print("Email invalido. Formato esperado ejemplo@dominio.com")
-            nuevo_email = input("Nuevo email (dejar vacio para mantener): ").strip()
-            if not nuevo_email:
-                break
-        if nuevo_email:
-            cliente["email"] = nuevo_email
+        cliente["email"] = nuevo_email
 
-    nuevo_estado = input("Nuevo estado (Activo/Inactivo/Suspendido) [Enter para mantener]: ").strip()
-    if nuevo_estado:
+# Actualiza el estado del cliente
+def actualizar_estado(cliente):
+   # solicita el nuevo estado y valida
+    nuevo_estado = input("Nuevo estado (Activo/Inactivo) [Enter para mantener]: ").strip()
+    while nuevo_estado:
         estado_normalizado = normalizar_estado(nuevo_estado)
-        while estado_normalizado not in ESTADOS_PERMITIDOS:
-            print("Estado invalido. Opciones: Activo, Inactivo o Suspendido.")
-            nuevo_estado = input("Nuevo estado (Activo/Inactivo/Suspendido) [Enter para mantener]: ").strip()
-            if not nuevo_estado:
-                estado_normalizado = None
-                break
-            estado_normalizado = normalizar_estado(nuevo_estado)
-        if estado_normalizado:
+        if estado_normalizado in ("activo", "inactivo"):
             cliente["estado"] = estado_normalizado
-
-    print(f"Cliente ID {id_cliente} actualizado correctamente.")
+            return
+        print("Estado invalido. Opciones: Activo o Inactivo.")
+        nuevo_estado = input("Nuevo estado (Activo/Inactivo) [Enter para mantener]: ").strip()

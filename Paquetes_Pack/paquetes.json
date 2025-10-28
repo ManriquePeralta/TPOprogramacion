@@ -1,17 +1,17 @@
-paquetes = [
+[
     {
         "id_paquete": 1,
         "destino": "Bariloche",
         "precio": 150000,
         "fecha_inicio": "15/09/2025",
         "fecha_fin": "19/09/2025",
-        "cupos": 25,
+        "cupos": 22,
         "tipo": "Estandar",
         "descripcion": "Excursion al Catedral"
     },
     {
         "id_paquete": 2,
-        "destino": "Cataratas del Iguazú",
+        "destino": "Cataratas del Iguazu",
         "precio": 120000,
         "fecha_inicio": "20/08/2025",
         "fecha_fin": "26/08/2025",
@@ -35,7 +35,7 @@ paquetes = [
         "precio": 200000,
         "fecha_inicio": "01/12/2025",
         "fecha_fin": "08/12/2025",
-        "cupos": "15",
+        "cupos": 15,
         "tipo": "Full",
         "descripcion": "Sky Week Premium Pass"
     }

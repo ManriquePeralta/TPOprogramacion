@@ -1,7 +1,8 @@
-"""Modificacion de reservas con control de cupos y estado."""
+# Modificacion de reservas con control de cupos y estado.
 
-from Reservas_Pack.lista_reservas import reservas
 from Reservas_Pack.funciones_aux import (
+    reservas,
+    guardar_reservas,
     validar_id,
     validar_cantidad_personas,
     obtener_reserva_por_id,
@@ -10,29 +11,37 @@ from Reservas_Pack.funciones_aux import (
     ESTADOS_VALIDOS,
 )
 from Reservas_Pack.mostrar_reservas import mostrar_reservas
-from Paquetes_Pack.lista_paquetes import paquetes
-from Paquetes_Pack.mostrar_paquetes import listar_paquetes
+from Paquetes_Pack.funciones_aux import (
+    cargar_paquete_desde_archivo,
+    guardar_paquete_en_archivo,
+)
+from Paquetes_Pack.mostrar_paquetes import mostrar_paquetes
 
 
 def modificar_reserva():
+    # Presenta opciones para modificar cantidad, paquete o estado.
     mostrar_reservas(interactivo=False)
-    id_reserva_txt = input("\nIngrese el ID de la reserva a modificar (0 para salir): ").strip()
-    if id_reserva_txt == "0":
+    # Solicita el identificador y da la chance de cancelar la edicion.
+    id_reserva = input("\nIngrese el ID de la reserva a modificar (0 para salir): ").strip()
+    if id_reserva == "0":
         print("Operacion cancelada.")
         return
 
-    while not validar_id(id_reserva_txt):
+    while not validar_id(id_reserva):
         print("ID invalido. Debe ser un numero positivo.")
-        id_reserva_txt = input("Ingrese el ID de la reserva a modificar (0 para salir): ").strip()
-        if id_reserva_txt == "0":
+        id_reserva = input("Ingrese el ID de la reserva a modificar (0 para salir): ").strip()
+        if id_reserva == "0":
             print("Operacion cancelada.")
             return
 
-    id_reserva = int(id_reserva_txt)
+    id_reserva = int(id_reserva)
     reserva = obtener_reserva_por_id(reservas, id_reserva)
     if reserva is None:
         print("No se encontro una reserva con ese ID.")
         return
+
+    # Obtiene la informacion de paquetes para reutilizarla en varias opciones.
+    paquetes = cargar_paquete_desde_archivo()
 
     opcion = ""
     while opcion != "0":
@@ -44,19 +53,26 @@ def modificar_reserva():
         opcion = input("Seleccione una opcion: ").strip()
 
         if opcion == "1":
-            modificar_cantidad(reserva)
+            # Ajusta la cantidad de pasajeros reservados.
+            modificar_cantidad(reserva, paquetes)
         elif opcion == "2":
-            modificar_paquete(reserva)
+            # Permite cambiar el paquete asociado.
+            modificar_paquete(reserva, paquetes)
         elif opcion == "3":
-            modificar_estado(reserva)
+            # Actualiza el estado (activa/cancelada).
+            modificar_estado(reserva, paquetes)
         elif opcion == "0":
             print("Regresando al menu de reservas...")
         else:
             print("Opcion invalida. Intente nuevamente.")
+      
+        # Guardar cambios cada vez que se modifica algo
+        guardar_reservas()
 
 
-def modificar_cantidad(reserva):
-    paquete = buscar_paquete(reserva["id_paquete"])
+def modificar_cantidad(reserva, paquetes):
+    # Ajusta la cantidad de personas respetando los cupos disponibles.
+    paquete = buscar_paquete(paquetes, reserva["id_paquete"])
     if paquete is None:
         print("No se encontro el paquete asociado a la reserva.")
         return
@@ -67,34 +83,40 @@ def modificar_cantidad(reserva):
         return
 
     print(f"Cupos disponibles para el paquete: {disponible}")
-    cantidad_txt = input("Nueva cantidad de personas: ").strip()
-    while not validar_cantidad_personas(cantidad_txt):
+    cantidad_personas = input("Nueva cantidad de personas: ").strip()
+    while not validar_cantidad_personas(cantidad_personas):
         print("La cantidad debe ser un numero entero mayor a 0.")
-        cantidad_txt = input("Nueva cantidad de personas: ").strip()
-    nueva_cantidad = int(cantidad_txt)
+        cantidad_personas = input("Nueva cantidad de personas: ").strip()
+    nueva_cantidad = int(cantidad_personas)
 
     if normalizar_estado(reserva["estado"]) == "activa":
         if nueva_cantidad > disponible:
             print("No es posible aumentar tanto la reserva. Cupos insuficientes.")
             return
+        # Ajusta los cupos restando solo la diferencia con el valor previo.
         paquete["cupos"] = paquete["cupos"] + reserva["personas"] - nueva_cantidad
     else:
         if nueva_cantidad > paquete["cupos"]:
             print("No es posible asignar esa cantidad porque el paquete no tiene cupos.")
             return
+        # Reactiva la reserva y descuenta cupos del paquete seleccionado.
         paquete["cupos"] -= nueva_cantidad
         reserva["estado"] = "activa"
         print("La reserva se reactivo automaticamente al asignar cupos.")
 
     reserva["personas"] = nueva_cantidad
     print("Cantidad de personas actualizada correctamente.")
+    
+    if not guardar_paquete_en_archivo(paquetes):
+        print("Advertencia: no se pudieron guardar los cambios de cupos.")
 
 
-def modificar_paquete(reserva):
-    paquete_actual = buscar_paquete(reserva["id_paquete"])
+def modificar_paquete(reserva, paquetes):
+    # Permite reasignar la reserva a otro paquete compatible.
+    paquete_actual = buscar_paquete(paquetes, reserva["id_paquete"])
     personas = reserva["personas"]
 
-    listar_paquetes()
+    mostrar_paquetes()
     id_paquete_txt = input("\nIngrese el ID del nuevo paquete (0 para cancelar): ").strip()
     if id_paquete_txt == "0":
         print("Operacion cancelada.")
@@ -106,7 +128,7 @@ def modificar_paquete(reserva):
             print("Operacion cancelada.")
             return
     id_paquete_nuevo = int(id_paquete_txt)
-    paquete_nuevo = buscar_paquete(id_paquete_nuevo)
+    paquete_nuevo = buscar_paquete(paquetes, id_paquete_nuevo)
 
     if paquete_nuevo is None:
         print("No existe un paquete con ese ID.")
@@ -122,23 +144,30 @@ def modificar_paquete(reserva):
             return
         paquete_nuevo["cupos"] -= personas
         if paquete_actual is not None:
+            # Devuelve los cupos al paquete original si la reserva se traslada.
             paquete_actual["cupos"] += personas
     else:
         if personas > disponible_nuevo:
             print("El paquete no tiene cupos suficientes para reactivar la reserva.")
             return
         paquete_nuevo["cupos"] -= personas
-        if paquete_actual is not None and normalizar_estado(reserva["estado"]) == "activa":
-            paquete_actual["cupos"] += personas
+        if paquete_actual is not None:
+            if normalizar_estado(reserva["estado"]) == "activa":
+                paquete_actual["cupos"] += personas
+        # Reactiva la reserva al asignarla a un paquete con disponibilidad.
         reserva["estado"] = "activa"
         print("La reserva se reactivo con el nuevo paquete.")
 
     reserva["id_paquete"] = id_paquete_nuevo
+    # Actualiza la tarifa de referencia con el precio del nuevo paquete.
     reserva["precio_unitario"] = paquete_nuevo.get("precio")
     print("Paquete actualizado correctamente.")
+    if not guardar_paquete_en_archivo(paquetes):
+        print("Advertencia: no se pudieron guardar los cambios de cupos.")
 
 
-def modificar_estado(reserva):
+def modificar_estado(reserva, paquetes):
+    # Cambia el estado entre activo y cancelado actualizando cupos.
     estado_actual = normalizar_estado(reserva["estado"])
     print(f"Estado actual: {formatear_estado(estado_actual)}")
     print("Estados disponibles: Activa / Cancelada")
@@ -151,23 +180,28 @@ def modificar_estado(reserva):
         print("La reserva ya posee ese estado.")
         return
 
-    paquete = buscar_paquete(reserva["id_paquete"])
+    paquete = buscar_paquete(paquetes, reserva["id_paquete"])
     personas = reserva["personas"]
 
     if estado_actual == "activa" and nuevo_estado != "activa":
         if paquete is not None:
+            # Al cancelar se liberan los cupos previamente asignados.
             paquete["cupos"] += personas
     elif estado_actual != "activa" and nuevo_estado == "activa":
         if paquete is None or personas > paquete["cupos"]:
             print("No hay cupos suficientes para reactivar la reserva.")
             return
+        # Al reactivar se consumen cupos de la disponibilidad actual.
         paquete["cupos"] -= personas
 
     reserva["estado"] = nuevo_estado
     print(f"Estado actualizado: {formatear_estado(reserva['estado'])}.")
+    if not guardar_paquete_en_archivo(paquetes):
+        print("Advertencia: no se pudieron guardar los cambios de cupos.")
 
 
-def buscar_paquete(id_paquete):
+def buscar_paquete(paquetes, id_paquete):
+    # Recupera el paquete con el ID indicado para reutilizarlo en validaciones.
     for paquete in paquetes:
         if paquete["id_paquete"] == id_paquete:
             return paquete

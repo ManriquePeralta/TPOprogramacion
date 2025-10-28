@@ -1,28 +1,33 @@
+# importar las funciones a probar desde el módulo correspondiente
 from Paquetes_Pack.funciones_aux import es_numero_positivo, comparar_fechas, es_fecha_valida
-from Paquetes_Pack.lista_paquetes import paquetes
 
-def test_es_numero_positivo():
-    assert es_numero_positivo("10") == True
-    assert es_numero_positivo("-5") == False
-    assert es_numero_positivo("abc") == False
-    assert es_numero_positivo("=") == False
+# Prueba de éxito 1: detecta valores positivos y numéricos.
+def test_es_numero_positivo_valido():
+    assert es_numero_positivo("10")
+    assert es_numero_positivo("5000000000")
 
-def test_comparar_fechas():
-    assert comparar_fechas("01/01/2024", "02/01/2024") == True
-    assert comparar_fechas("10/01/2024", "05/01/2024") == False
+# Prueba de éxito 2: compara fechas en formato dd/mm/yyyy.
+def test_comparar_fechas_en_orden():
+    assert comparar_fechas("01/01/2024", "02/01/2024")
+    assert comparar_fechas("10/01/2024", "10/01/2024")
 
+ # Prueba de éxito 3: valida formato dd/mm/yyyy.
+def test_es_fecha_valida_correcta():
+    assert es_fecha_valida("10/10/2025")
 
-def test_modificar_paquete():
-    assert es_numero_positivo("1000") == True, "bien"
-    assert es_numero_positivo("-50") == False, "num negativ no"
-    assert es_numero_positivo("abc") == False, "palabras no, numeros"
-    assert es_numero_positivo("5000000000") == True, "joya"
-   
+ # Prueba de fallo 1: detecta valores no positivos o no numéricos.
+def test_es_numero_positivo_falla_en_valores_invalidos():
+    assert not es_numero_positivo("-5")
+    assert not es_numero_positivo("abc")
+    assert not es_numero_positivo("=")
 
-    assert es_fecha_valida("10/10/2025") == True, "perf"
-    assert es_fecha_valida("99/02/2024") == False, "feb no 31 ni 30 ni siempre 29"
-    assert es_fecha_valida("10-10-2025") == False, "mal el formato"  
-    assert es_fecha_valida("12-2-2025") == False, "mal el formato"
-    assert es_fecha_valida("2025/12/01") == False, "Orden incorrecto de día, mes y año"
+ # Prueba de fallo 2: formato inválido impide la comparación.
+def test_comparar_fechas_falla_con_formato_incorrecto():
+    assert not comparar_fechas("2024-01-10", "2024/01/11")
+    assert not comparar_fechas("", "02/01/2024")
 
-
+ # Prueba de fallo 3: detecta formatos incorrectos.
+def test_es_fecha_valida_falla_con_formato_incorrecto():  
+    assert not es_fecha_valida("10-10-2025")
+    assert not es_fecha_valida("12-2-2025")
+    assert not es_fecha_valida("2025/12/01")

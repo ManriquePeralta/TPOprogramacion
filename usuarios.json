@@ -1,0 +1,8 @@
+{
+    "usuario": [
+        {"usuario": "admin123", "contrasena": "1234"},
+        {"usuario": "fox", "contrasena": "abcd"},
+        {"usuario": "profe", "contrasena": "5678"},
+        {"usuario": "alumno", "contrasena": "qwer"}
+    ]
+}

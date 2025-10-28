@@ -1,15 +1,22 @@
-"""Cancelacion de reservas con restauracion de cupos."""
+# Cancelacion de reservas con restauracion de cupos.
 
-from Reservas_Pack.lista_reservas import reservas
-from Reservas_Pack.funciones_aux import validar_id, obtener_reserva_por_id, formatear_estado
+from Reservas_Pack.funciones_aux import (
+    reservas,
+    guardar_reservas,
+    validar_id,
+    obtener_reserva_por_id,
+    formatear_estado,
+)
 from Reservas_Pack.mostrar_reservas import mostrar_reservas
-from Paquetes_Pack.lista_paquetes import paquetes
+from Paquetes_Pack.funciones_aux import cargar_paquete_desde_archivo, guardar_paquete_en_archivo
 
 
 def eliminar_reserva():
+    # Cancela una reserva, libera cupos y persiste los cambios.
     print("\n\n=== CANCELAR RESERVA ===")
     mostrar_reservas(interactivo=False)
 
+    # Solicita el identificador y permite cancelar la operacion.
     id_reserva_txt = input("\nIngrese el ID de la reserva a cancelar (0 para salir): ").strip()
     if id_reserva_txt == "0":
         print("Operacion cancelada.")
@@ -40,15 +47,26 @@ def eliminar_reserva():
         print("Operacion cancelada por el usuario.")
         return
 
-    paquete = buscar_paquete(reserva["id_paquete"])
-    if paquete is not None:
+    # Restaura cupos del paquete asociado antes de actualizar el estado.
+    paquetes = cargar_paquete_desde_archivo()
+    paquete = buscar_paquete(paquetes, reserva["id_paquete"])
+    if paquete:
         paquete["cupos"] += reserva["personas"]
 
     reserva["estado"] = "cancelada"
+    
+    # Guardar cambios en TXT
+    guardar_reservas()
+
+
     print(f"Reserva ID {id_reserva} marcada como {formatear_estado(reserva['estado'])}.")
 
+    if not guardar_paquete_en_archivo(paquetes):
+        print("Advertencia: no se pudieron guardar los cambios de cupos.")
 
-def buscar_paquete(id_paquete):
+
+def buscar_paquete(paquetes, id_paquete):
+    # Devuelve el paquete con el ID solicitado, si existe.
     for paquete in paquetes:
         if paquete["id_paquete"] == id_paquete:
             return paquete
