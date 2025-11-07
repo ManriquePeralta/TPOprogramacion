@@ -6,18 +6,14 @@ from Reservas_Pack.funciones_aux import (
     reservas_por_estado,
     contar_por_estado,
     validar_id,
-    obtener_reserva_por_id,
     formatear_estado,
+    busqueda_secuencial,
 )
 from Clientes_Pack.funciones_aux import (
-    buscar_indice_por_id as buscar_cliente_por_id,
     formatear_estado as formatear_estado_cliente,
     cargar_clientes_desde_archivo,
 )
-from Paquetes_Pack.funciones_aux import (
-    cargar_paquete_desde_archivo,
-    buscar_indice_por_id as buscar_paquete_por_id,
-)
+from Paquetes_Pack.funciones_aux import cargar_paquete_desde_archivo
 
 
 def mostrar_reservas(estado=None, interactivo=True):
@@ -47,13 +43,16 @@ def mostrar_reservas(estado=None, interactivo=True):
 
     # Recorre la lista ordenada e imprime cada registro con informacion asociada.
     for reserva in reservas_ordenadas:
-        indice_cliente = buscar_cliente_por_id(clientes_actuales, reserva["id_cliente"])
-        cliente = clientes_actuales[indice_cliente] if indice_cliente != -1 else None
-        paquete = obtener_paquete(paquetes, reserva["id_paquete"])
+        
+        cliente = busqueda_secuencial(clientes_actuales, "id", reserva[1])
+        
+        paquete = obtener_paquete(paquetes, reserva[2])
+        
         nombre_cliente = cliente["nombre"] if cliente else "Desconocido"
-        destino = reserva.get("destino") or (paquete["destino"] if paquete else "Sin datos")
+
+        destino = reserva[3] or (paquete["destino"] if paquete else "Sin datos")
         print(
-            f"{reserva['id_reserva']:<4} | {nombre_cliente:<18} | {destino:<24} | {reserva['personas']:<8} | {formatear_estado(reserva['estado']):<10}"
+            f"{reserva[0]:<4} | {nombre_cliente:<18} | {destino:<24} | {reserva[4]:<8} | {formatear_estado(reserva[5]):<10}"
         )
 
     if estado is None:
@@ -85,19 +84,20 @@ def mostrar_detalle_interactivo():
             return
         if not validar_id(opcion):
             print("ID invalido. Debe ser un numero positivo.")
-            continue
-        # Muestra el detalle cuando el ID es valido.
-        mostrar_detalle_reserva(int(opcion))
+        else:
+            # Muestra el detalle cuando el ID es valido.
+            mostrar_detalle_reserva(int(opcion))
 
 
 def mostrar_detalle_reserva(id_reserva):
     # Muestra la informacion completa de una reserva.
-    reserva = obtener_reserva_por_id(reservas, id_reserva)
+    reserva = busqueda_secuencial(reservas, "id_reserva", id_reserva)
     if reserva is None:
         print(f"\nNo se encontro una reserva con ID {id_reserva}.")
         return
 
-    cliente = obtener_cliente(reserva["id_cliente"])
+    clientes = cargar_clientes_desde_archivo()
+    cliente = busqueda_secuencial(clientes, "id", reserva["id_cliente"])
     paquetes = cargar_paquete_desde_archivo()
     paquete = obtener_paquete(paquetes, reserva["id_paquete"])
     destino_reserva = reserva.get("destino") or (paquete["destino"] if paquete else "Sin datos")
@@ -150,22 +150,9 @@ def mostrar_detalle_reserva(id_reserva):
         print("  Paquete no registrado.")
 
 
-def obtener_cliente(id_cliente):
-    # Recupera el cliente asociado a la reserva si esta registrado.
-    clientes = cargar_clientes_desde_archivo()
-    indice = buscar_cliente_por_id(clientes, id_cliente)
-    if indice == -1:
-        return None
-    return clientes[indice]
-
-
 def obtener_paquete(paquetes, id_paquete):
     # Busca el paquete correspondiente dentro del listado en memoria.
-    indice = buscar_paquete_por_id(paquetes, id_paquete)
-    if indice == -1:
-        return None
-    return paquetes[indice]
-    return None
+    return busqueda_secuencial(paquetes, "id_paquete", id_paquete)
 
 
 # Alias para compatibilidad con codigo existente

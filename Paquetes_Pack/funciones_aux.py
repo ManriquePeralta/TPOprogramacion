@@ -134,9 +134,10 @@ def min_precio(paquetes):
 
 
 def destinos_unicos(paquetes):
-    # Devuelve una lista de destinos sin repetir.
-    vistos = {paquete.get("destino", "Destino desconocido") for paquete in paquetes}
-    return sorted(vistos)
+    """Devuelve un conjunto con los destinos sin repetir."""
+    destinos = {paquete["destino"] for paquete in paquetes if "destino" in paquete}
+    return destinos
+
 
 
 def es_fecha_valida(fecha):

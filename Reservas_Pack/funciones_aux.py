@@ -3,17 +3,14 @@
 from .crear_lista import leer_reservas_txt, guardar_reservas_txt
 import re
 
-try:
-    reservas = leer_reservas_txt()
-except Exception:
-    # Si el archivo no existe o esta corrupto, se trabaja con una lista vacia
-    reservas = []
+reservas = leer_reservas_txt()
 # Lista global que representa las reservas cargadas en memoria.
 
 
 def guardar_reservas():
     # Guarda la lista global de reservas en el archivo TXT.
     guardar_reservas_txt(reservas)
+
 
 ESTADOS_VALIDOS = ("activa", "cancelada")
 
@@ -38,31 +35,70 @@ def validar_cantidad_personas(texto):
     return bool(re.match(r"^[1-9]\d*$", texto or ""))
 
 
+def busqueda_secuencial(lista, clave, valor, retornar_indice=False):
+    # Busca el primer elemento cuyo campo coincide con el valor indicado.
+    for indice, elemento in enumerate(lista):
+        if elemento.get(clave) == valor:
+            return indice if retornar_indice else elemento
+    return -1 if retornar_indice else None
+
+def busqueda_secuencial_reservas(reservas,clave,valor):
+
+    for inidice,reserva in enumerate(reservas):
+
+        print(reserva[clave])
+        if str(reserva[clave])==valor:
+            return reserva 
+    
+    return -1
+
+
+def obtener_paquete_disponible(paquetes, id_paquete):
+    # Devuelve el paquete con cupos disponibles o un mensaje de error.
+    paquete = busqueda_secuencial(paquetes, "id_paquete", id_paquete)
+    if paquete is None:
+        return None, "No existe un paquete con ese ID."
+    if paquete.get("cupos", 0) <= 0:
+        return None, "El paquete no tiene cupos disponibles."
+    return paquete, None
+
+
+def validar_cupos_disponibles(paquete, cantidad):
+    # Confirma que la cantidad solicitada no exceda los cupos.
+    return cantidad <= paquete.get("cupos", 0)
+
+
+
+
+def obtener_reserva_activa(reservas_lista, id_reserva):
+    # Devuelve la reserva si existe y no esta cancelada.
+    
+    reserva = busqueda_secuencial_reservas(reservas_lista, 0, id_reserva)
+    if reserva is -1:
+        return None, "No se encontro una reserva con ese ID."
+    if normalizar_estado(reserva[5]) == "cancelada":
+        return None, "La reserva ya se encuentra cancelada."
+    return reserva, None
+
+
+def restaurar_cupos(paquetes, id_paquete, cantidad):
+    # Busca el paquete y le restaura los cupos cancelados.
+    paquete = busqueda_secuencial(paquetes, "id_paquete", id_paquete)
+    if paquete is not None:
+        paquete["cupos"] = paquete.get("cupos", 0) + cantidad
+    return paquete
+
+
 def generar_nuevo_id(reservas):
     # Obtiene el siguiente ID disponible a partir de la lista de reservas.
     if not reservas:
         return 1
-    return max(reserva["id_reserva"] for reserva in reservas) + 1
+    return max(reserva[0] for reserva in reservas) + 1
 
 
-def ordenar_reservas(reservas, clave="id_reserva"):
+def ordenar_reservas(reservas):
     # Devuelve una nueva lista de reservas ordenada por la clave indicada.
-    return sorted(reservas, key=lambda reserva: reserva[clave])
-
-
-def buscar_indice_por_id(reservas, id_reserva):
-    # Devuelve el indice de la reserva con el ID indicado, o -1 si no existe.
-    indices = {
-        reservas[indice]["id_reserva"]: indice
-        for indice in range(len(reservas))
-    }
-    return indices.get(id_reserva, -1)
-
-
-def obtener_reserva_por_id(reservas, id_reserva):
-    # Devuelve la reserva con el ID indicado, o None si no existe.
-    indice = buscar_indice_por_id(reservas, id_reserva)
-    return reservas[indice] if indice != -1 else None
+    return sorted(reservas, key=lambda reserva: reserva[0])
 
 
 def reservas_por_estado(reservas, estado_buscado):
@@ -75,7 +111,7 @@ def contar_por_estado(reservas):
     # Cuenta cuantas reservas hay por estado.
     conteo = {}
     for reserva in reservas:
-        estado = normalizar_estado(reserva["estado"])
+        estado = normalizar_estado(reserva[5])
         conteo[estado] = conteo.get(estado, 0) + 1
     return conteo
 
@@ -84,8 +120,8 @@ def reservas_por_cliente(reservas, id_cliente, solo_activas=False):
     # Obtiene las reservas de un cliente, opcionalmente solo activas.
     resultado = []
     for reserva in reservas:
-        if reserva["id_cliente"] == id_cliente:
-            if solo_activas and normalizar_estado(reserva["estado"]) != "activa":
+        if reserva[1] == id_cliente:
+            if solo_activas and normalizar_estado(reserva[5]) != "activa":
                 continue
             resultado.append(reserva)
     return resultado
@@ -95,9 +131,8 @@ def reservas_por_paquete(reservas, id_paquete, solo_activas=False):
     # Devuelve reservas asociadas a un paquete determinado.
     seleccionadas = []
     for reserva in reservas:
-        if reserva["id_paquete"] == id_paquete:
-            if solo_activas and normalizar_estado(reserva["estado"]) != "activa":
+        if reserva[2] == id_paquete:
+            if solo_activas and normalizar_estado(reserva[5]) != "activa":
                 continue
             seleccionadas.append(reserva)
     return seleccionadas
-

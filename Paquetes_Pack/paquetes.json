@@ -5,7 +5,7 @@
         "precio": 150000,
         "fecha_inicio": "15/09/2025",
         "fecha_fin": "19/09/2025",
-        "cupos": 22,
+        "cupos": 24,
         "tipo": "Estandar",
         "descripcion": "Excursion al Catedral"
     },
@@ -15,7 +15,7 @@
         "precio": 120000,
         "fecha_inicio": "20/08/2025",
         "fecha_fin": "26/08/2025",
-        "cupos": 10,
+        "cupos": 11,
         "tipo": "Premium",
         "descripcion": "3 dias de pase a las Cataratas, lado Argentino y Brasilero"
     },
@@ -25,7 +25,7 @@
         "precio": 95000,
         "fecha_inicio": "05/10/2025",
         "fecha_fin": "09/10/2025",
-        "cupos": 30,
+        "cupos": 31,
         "tipo": "Estandar",
         "descripcion": "Excursion al cerro de los 7 colores"
     },
@@ -35,7 +35,7 @@
         "precio": 200000,
         "fecha_inicio": "01/12/2025",
         "fecha_fin": "08/12/2025",
-        "cupos": 15,
+        "cupos": 8,
         "tipo": "Full",
         "descripcion": "Sky Week Premium Pass"
     }

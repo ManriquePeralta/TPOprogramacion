@@ -21,15 +21,14 @@ def cargar_clientes_desde_archivo():
     try:
         with open(ARCHIVO_CLIENTES, "r", encoding="utf-8-sig") as archivo:
             datos = json.load(archivo)
-            if isinstance(datos, list):
-                return datos
-            print("Advertencia: el archivo de clientes tiene un formato invalido.")
-    # Maneja errores comunes al abrir o leer el archivo
-    except FileNotFoundError:
+        return datos
+           
+ 
+    except FileNotFoundError: # Si el archivo no existe, retorna una lista vacia
         guardar_clientes_en_archivo([])
-    except json.JSONDecodeError:
-        print("Advertencia: no se pudo leer clientes.json. Se usara una lista vacia.")
-    except OSError as error:
+    except json.JSONDecodeError: # Si el archivo JSON tiene un formato invalido, retorna una lista vacia
+        print("Advertencia: no se pudo leer clientes.json.")
+    except OSError as error: # Otros errores de archivo
         print(f"No se pudo abrir clientes.json: {error}")
     return []
 

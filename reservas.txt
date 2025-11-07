@@ -1,3 +1,10 @@
-1;7;1;Bariloche;3;activa;150000
-1;7;1;Bariloche;3;activa;150000
-1;7;1;Bariloche;3;activa;150000
+1;7;1;Bariloche;3;cancelada;150000.0
+2;5;2;Iguazu;2;cancelada;95000.0
+3;3;4;Mendoza;4;cancelada;82000.0
+4;8;3;Salta;1;cancelada;110000.0
+5;2;5;Cordoba;5;activa;60000.0
+6;9;2;Iguazu;3;cancelada;95000.0
+7;1;2;Cataratas del Iguazu;1;activa;120000.0
+8;7;4;Ushuaia;6;cancelada;200000.0
+9;4;4;Ushuaia;7;activa;200000.0
+10;4;1;Bariloche;1;activa;150000.0

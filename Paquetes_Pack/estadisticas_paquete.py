@@ -56,6 +56,7 @@ def estadisticas_paquetes():
     # Calcula el precio promedio a partir de los acumulados.
     promedio_precio = suma_precios / total_paquetes if total_paquetes else 0.0
 
+
     print("\n=== ESTADISTICAS DE PAQUETES ===")
     print("Resumen general")
     print(f"  Total de paquetes .......: {total_paquetes}")
