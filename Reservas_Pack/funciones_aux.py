@@ -43,9 +43,9 @@ def busqueda_secuencial(lista, clave, valor, retornar_indice=False):
     return -1 if retornar_indice else None
 
 def busqueda_secuencial_reservas(reservas,clave,valor):
-
+    # Busca en la lista de reservas el primer elemento cuyo campoo coincide con el valor indicado 
     for inidice,reserva in enumerate(reservas):
-
+        
         print(reserva[clave])
         if str(reserva[clave])==valor:
             return reserva 
@@ -84,6 +84,7 @@ def obtener_reserva_activa(reservas_lista, id_reserva):
 def restaurar_cupos(paquetes, id_paquete, cantidad):
     # Busca el paquete y le restaura los cupos cancelados.
     paquete = busqueda_secuencial(paquetes, "id_paquete", id_paquete)
+    # Si se encontro el paquete, restaura los cupos 
     if paquete is not None:
         paquete["cupos"] = paquete.get("cupos", 0) + cantidad
     return paquete
@@ -104,12 +105,14 @@ def ordenar_reservas(reservas):
 def reservas_por_estado(reservas, estado_buscado):
     # Filtra las reservas por estado (case insensitive).
     estado_buscado = normalizar_estado(estado_buscado)
+    # Retorna la lista de resrevas que coinciden con el estado buscado 
     return [reserva for reserva in reservas if normalizar_estado(reserva["estado"]) == estado_buscado]
 
 
 def contar_por_estado(reservas):
     # Cuenta cuantas reservas hay por estado.
     conteo = {}
+    # Recorre todas las reservas y actualiza el conteo por estado 
     for reserva in reservas:
         estado = normalizar_estado(reserva[5])
         conteo[estado] = conteo.get(estado, 0) + 1
@@ -120,7 +123,9 @@ def reservas_por_cliente(reservas, id_cliente, solo_activas=False):
     # Obtiene las reservas de un cliente, opcionalmente solo activas.
     resultado = []
     for reserva in reservas:
+        # Verifica si la reserva pertenece al cliente indicado 
         if reserva[1] == id_cliente:
+            # Verifica que se filtren solo las reservas activas 
             if solo_activas and normalizar_estado(reserva[5]) != "activa":
                 continue
             resultado.append(reserva)

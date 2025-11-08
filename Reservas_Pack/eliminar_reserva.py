@@ -23,22 +23,24 @@ def eliminar_reserva():
 
     reserva_seleccionada = None
     id_reserva = None
-
+    # Seleccionar reserva a cancelar
     while reserva_seleccionada is None:
         id_reserva_txt = input("\nIngrese el ID de la reserva a cancelar (0 para salir): ").strip()
         if id_reserva_txt == "0":
             print("Operacion cancelada.")
             return
+        # Validar ID de la reserva
         if not validar_id(id_reserva_txt):
             print("ID invalido. Debe ser un numero positivo.")
         else:
+            # Buscar reserva activa por ID 
             id_reserva = id_reserva_txt
             reserva, error = obtener_reserva_activa(reservas, id_reserva)
             if error:
                 print(error)
             else:
                 reserva_seleccionada = reserva
-
+    # Confirmar cancelacion de la reserva
     confirmar = input("Confirma cancelar la reserva? (s/n): ").strip().lower()
     while confirmar not in ("s", "n"):
         confirmar = input("Respuesta invalida. Confirma cancelar la reserva? (s/n): ").strip().lower()

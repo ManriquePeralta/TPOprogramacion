@@ -40,18 +40,23 @@ def agregar_reserva():
     cliente_seleccionado = None
     id_cliente = None
 
+    # Ingresar ID del cliente
     while cliente_seleccionado is None:
         id_cliente_txt = input("\nIngrese el ID del cliente (0 para salir): ").strip()
         if id_cliente_txt == "0":
             print("Operacion cancelada.")
             return
+        
+        #Validar ID del cliente
         if not validar_id_cliente(id_cliente_txt):
             print("ID invalido. Debe ser un numero positivo.")
         else:
             id_cliente = int(id_cliente_txt)
+            # Buscar secuencialmente el cliente por ID
             cliente = busqueda_secuencial(clientes_actuales, "id", id_cliente)
             if cliente is None:
                 print("No existe un cliente con ese ID.")
+            # Verificar si el cliente esta activo
             elif normalizar_estado_cliente(cliente["estado"]) != "activo":
                 print("El cliente no esta activo. Seleccione otro cliente.")
             else:
@@ -61,30 +66,35 @@ def agregar_reserva():
     paquete_seleccionado = None
     id_paquete = None
 
+    # Ingresar ID del paquete
     while paquete_seleccionado is None:
         id_paquete_txt = input("\nIngrese el ID del paquete a reservar (0 para salir): ").strip()
         if id_paquete_txt == "0":
             print("Operacion cancelada.")
             return
+        # Validar ID del paquete 
         if not validar_id(id_paquete_txt):
             print("ID invalido. Debe ser un numero positivo.")
         else:
             id_paquete = int(id_paquete_txt)
+            # Obtener paquete disponible 
             paquete, error = obtener_paquete_disponible(paquetes, id_paquete)
             if error:
                 print(error)
             else:
                 paquete_seleccionado = paquete
-
+    # Ingresar cantidad de personas
     personas = 0
     cantidad_txt = input("Cantidad de personas: ").strip()
     entrada_valida = False
     while entrada_valida is False:
+        # Validar cantidad de personas
         if not validar_cantidad_personas(cantidad_txt):
             print("La cantidad debe ser un numero entero mayor a 0.")
             cantidad_txt = input("Cantidad de personas: ").strip()
         else:
             personas = int(cantidad_txt)
+            # Validar cupos disponibles 
             if not validar_cupos_disponibles(paquete_seleccionado, personas):
                 print("La cantidad supera los cupos disponibles.")
                 cantidad_txt = input("Cantidad de personas: ").strip()
@@ -108,8 +118,11 @@ def agregar_reserva():
     
     # Guardar cambios en TXT
     guardar_reservas()
-
+    # Mostrar mensaje de exito y guardar paquete en archivo 
     nombre_cliente = cliente_seleccionado["nombre"]
     print(f"Reserva creada con exito. ID: {nuevo_id} (Cliente: {nombre_cliente}).")
 
     guardar_paquete_en_archivo(paquetes)
+
+
+

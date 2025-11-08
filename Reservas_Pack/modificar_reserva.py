@@ -27,7 +27,7 @@ def modificar_reserva():
     if id_reserva == "0":
         print("Operacion cancelada.")
         return
-
+    # Valida el ID de la reserva a modificar 
     while not validar_id(id_reserva):
         print("ID invalido. Debe ser un numero positivo.")
         id_reserva = input("Ingrese el ID de la reserva a modificar (0 para salir): ").strip()
@@ -36,6 +36,7 @@ def modificar_reserva():
             return
 
     id_reserva = int(id_reserva)
+    # Busca secuencialmente el ID de la reserva 
     reserva = busqueda_secuencial_reservas(reservas, 0, id_reserva)
     if reserva is None:
         print("No se encontro una reserva con ese ID.")
@@ -77,14 +78,16 @@ def modificar_cantidad(reserva, paquetes):
     if paquete is None:
         print("No se encontro el paquete asociado a la reserva.")
         return
-
+    # Calcula los cupos disponibles considerando el estado actual de la reserva  
     disponible = paquete["cupos"] + reserva[4] if normalizar_estado(reserva[5]) == "activa" else paquete["cupos"]
     if disponible == 0:
         print("No hay cupos disponibles para ajustar la cantidad.")
         return
-
+    # Se muestran los cupos disponibles para el paquete 
     print(f"Cupos disponibles para el paquete: {disponible}")
+    # Se modifica la nueva cantidad de personas 
     cantidad_personas = input("Nueva cantidad de personas: ").strip()
+    # Valida la cantidad de personas ingresadas 
     while not validar_cantidad_personas(cantidad_personas):
         print("La cantidad debe ser un numero entero mayor a 0.")
         cantidad_personas = input("Nueva cantidad de personas: ").strip()
@@ -121,18 +124,21 @@ def modificar_paquete(reserva, paquetes):
     if id_paquete_txt == "0":
         print("Operacion cancelada.")
         return
+    # Valida el ID del paquete 
     while not validar_id(id_paquete_txt):
         print("ID invalido. Debe ser un numero positivo.")
         id_paquete_txt = input("Ingrese el ID del nuevo paquete (0 para cancelar): ").strip()
         if id_paquete_txt == "0":
             print("Operacion cancelada.")
             return
+        
     id_paquete_nuevo = int(id_paquete_txt)
     paquete_nuevo = busqueda_secuencial(paquetes, "id_paquete", id_paquete_nuevo)
 
     if paquete_nuevo is None:
         print("No existe un paquete con ese ID.")
         return
+    
     if paquete_nuevo["id_paquete"] == reserva[2]:
         print("La reserva ya esta asociada a ese paquete.")
         return
@@ -170,7 +176,9 @@ def modificar_estado(reserva, paquetes):
     estado_actual = normalizar_estado(reserva[5])
     print(f"Estado actual: {formatear_estado(estado_actual)}")
     print("Estados disponibles: Activa / Cancelada")
+
     nuevo_estado = input("Ingrese el nuevo estado: ").strip().lower()
+
     while nuevo_estado not in ESTADOS_VALIDOS:
         print("Estado invalido. Opciones validas: Activa o Cancelada.")
         nuevo_estado = input("Ingrese el nuevo estado: ").strip().lower()
@@ -186,6 +194,7 @@ def modificar_estado(reserva, paquetes):
         if paquete is not None:
             # Al cancelar se liberan los cupos previamente asignados.
             paquete["cupos"] += personas
+
     elif estado_actual != "activa" and nuevo_estado == "activa":
         if paquete is None or personas > paquete["cupos"]:
             print("No hay cupos suficientes para reactivar la reserva.")
@@ -195,4 +204,5 @@ def modificar_estado(reserva, paquetes):
 
     reserva[5] = nuevo_estado
     print(f"Estado actualizado: {formatear_estado(reserva[5])}.")
+    
     guardar_paquete_en_archivo(paquetes)

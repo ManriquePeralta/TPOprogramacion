@@ -31,7 +31,9 @@ def mostrar_reservas(estado=None, interactivo=True):
         return []
 
     reservas_ordenadas = ordenar_reservas(listado)
+
     encabezado = f"{'ID':<4} | {'Cliente':<18} | {'Destino':<24} | {'Personas':<8} | {'Estado':<10}"
+
     ancho = len(encabezado)
 
     print(f"\n{titulo:=^{ancho}}")
@@ -82,6 +84,7 @@ def mostrar_detalle_interactivo():
         if opcion == "0":
             print("Volviendo al menu de reservas...")
             return
+        # Validacion del ID de la reserva 
         if not validar_id(opcion):
             print("ID invalido. Debe ser un numero positivo.")
         else:
@@ -113,13 +116,18 @@ def mostrar_detalle_reserva(id_reserva):
     print(f"  Personas .......: {reserva['personas']}")
     print(f"  Estado .........: {formatear_estado(reserva['estado'])}")
 
+    #  Obtiene el precio unitario desde la reserva
     precio_unitario = reserva.get('precio_unitario')
+    # Si la reserva no tiene precio asignado, lo obtiene desde el paquete asociado
     if precio_unitario is None and paquete:
         precio_unitario = paquete.get('precio')
+    # Si no se encontró un precio, no tiene precio total
     if precio_unitario is None:
         precio_total = None
     else:
+        # Convierte el precio unitario a número flotante para evitar errores de tipo
         precio_unitario = float(precio_unitario)
+        # Calcula el precio total multiplicando el precio por persona por la cantidad de personas en la reserva
         precio_total = precio_unitario * int(reserva.get('personas', 0))
 
     print("\nResumen economico")
